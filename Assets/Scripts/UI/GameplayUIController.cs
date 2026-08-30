@@ -73,6 +73,8 @@ namespace EightBall.UI
             {
                 _spinButton.UnregisterCallback<PointerDownEvent>(OnSpinButtonPressed);
                 _spinButton.UnregisterCallback<PointerUpEvent>(OnSpinButtonReleased);
+                _spinButton.UnregisterCallback<PointerLeaveEvent>(OnSpinButtonReleased);
+                _spinButton.UnregisterCallback<PointerCancelEvent>(OnSpinButtonReleased);
             }
 
             if (_spinBall != null)
@@ -80,6 +82,8 @@ namespace EightBall.UI
                 _spinBall.UnregisterCallback<PointerDownEvent>(OnHitPointPointerDown);
                 _spinBall.UnregisterCallback<PointerMoveEvent>(OnHitPointPointerMove);
                 _spinBall.UnregisterCallback<PointerUpEvent>(OnHitPointPointerUp);
+                _spinBall.UnregisterCallback<PointerLeaveEvent>(OnHitPointPointerUp);
+                _spinBall.UnregisterCallback<PointerCancelEvent>(OnHitPointPointerUp);
             }
 
             if (_root != null)
@@ -117,6 +121,8 @@ namespace EightBall.UI
 
             _spinButton.RegisterCallback<PointerDownEvent>(OnSpinButtonPressed);
             _spinButton.RegisterCallback<PointerUpEvent>(OnSpinButtonReleased);
+            _spinButton.RegisterCallback<PointerLeaveEvent>(OnSpinButtonReleased);
+            _spinButton.RegisterCallback<PointerCancelEvent>(OnSpinButtonReleased);
 
             // Delay initial dot placement until layout is resolved
             _spinButton.RegisterCallback<GeometryChangedEvent>(_ => RefreshButtonDot());
@@ -133,6 +139,8 @@ namespace EightBall.UI
             _spinBall.RegisterCallback<PointerDownEvent>(OnHitPointPointerDown);
             _spinBall.RegisterCallback<PointerMoveEvent>(OnHitPointPointerMove);
             _spinBall.RegisterCallback<PointerUpEvent>(OnHitPointPointerUp);
+            _spinBall.RegisterCallback<PointerLeaveEvent>(OnHitPointPointerUp);
+            _spinBall.RegisterCallback<PointerCancelEvent>(OnHitPointPointerUp);
 
             // Delay initial hit-dot placement until layout is resolved
             _spinBall.RegisterCallback<GeometryChangedEvent>(_ => RefreshHitDot());
@@ -150,7 +158,7 @@ namespace EightBall.UI
             SetPanelOpen(!_panelOpen);
         }
 
-        private void OnSpinButtonReleased(PointerUpEvent evt)
+        private void OnSpinButtonReleased(EventBase evt)
         {
             IsSpinInteracting = false;
         }
@@ -198,12 +206,18 @@ namespace EightBall.UI
             UpdateSpinFromLocalPosition(evt.localPosition);
         }
 
-        private void OnHitPointPointerUp(PointerUpEvent evt)
+        private void OnHitPointPointerUp(EventBase evt)
         {
             if (!_isDraggingHitPoint) return;
             _isDraggingHitPoint = false;
             IsSpinInteracting = false;
-            _spinBall.ReleasePointer(evt.pointerId);
+            
+            if (evt is PointerUpEvent pointerUp)
+                _spinBall.ReleasePointer(pointerUp.pointerId);
+            else if (evt is PointerLeaveEvent pointerLeave)
+                _spinBall.ReleasePointer(pointerLeave.pointerId);
+            else if (evt is PointerCancelEvent pointerCancel)
+                _spinBall.ReleasePointer(pointerCancel.pointerId);
         }
 
         private void UpdateSpinFromLocalPosition(Vector2 localPos)
