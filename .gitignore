@@ -22,3 +22,7 @@ Thumbs.db
 
 # Unity crash reports
 sysinfo.txt
+
+# Agent-related files
+.agents/
+.context-templates/
