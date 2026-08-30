@@ -1,0 +1,41 @@
+.main-container {
+    flex-grow: 1;
+    background-color: rgb(34, 139, 34); /* Pool table green */
+}
+
+.view-container {
+    flex-grow: 1;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+}
+
+.title-label {
+    font-size: 80px;
+    -unity-font-style: bold;
+    color: white;
+    margin-bottom: 50px;
+}
+
+.menu-button {
+    font-size: 40px;
+    width: 300px;
+    height: 80px;
+    margin-bottom: 20px;
+    background-color: rgb(200, 200, 200);
+    border-radius: 10px;
+    color: black;
+}
+
+.menu-button:hover {
+    background-color: white;
+}
+
+.credits-text {
+    font-size: 30px;
+    color: white;
+    margin-bottom: 10px;
+    -unity-font-style: bold;
+}
