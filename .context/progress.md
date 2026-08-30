@@ -7,7 +7,7 @@
 - Main Menu and Gameplay scenes instantiated and added to Build Settings.
 
 ## Next Task
-- Phase 1: Foundation (Configure basic Physics 2D settings for a pool table and balls)
+- Phase 2: Core Gameplay Mechanics (Implement Input Manager for drag-to-aim and drag-for-power)
 
 ## Blockers / Notes
 - None at the moment.
