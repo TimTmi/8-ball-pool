@@ -9,6 +9,7 @@ Monolithic Unity client architecture. The game uses a scene-based flow consistin
 - **Physics Engine (Unity)**: Handles runtime collision detection and rigidbody physics for the balls.
 - **Game State Manager**: Enforces standard 8-ball rules (legal breaks, valid hits, pocketing logic, win/loss conditions) and switches turns between the two local players.
 - **UI Controller**: Manages minimal screens. Gameplay UI includes lock toggles, spin control UI, and the Shoot confirmation button.
+- **Table Setup & Layout**: A procedural approach (`TableSetup.cs`) builds the physics and visual elements of the table at runtime (balls, cushions, pockets) using strict mathematical constants (`TableLayout.cs`) for precise physical placement.
 
 ## Communication
 - User input triggers UI state changes (e.g., revealing the Shoot button).
