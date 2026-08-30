@@ -5,9 +5,10 @@
 - UI Toolkit assets (UXML/USS) for Main Menu, Gameplay, and Credits created.
 - Basic UI Controllers implemented.
 - Main Menu and Gameplay scenes instantiated and added to Build Settings.
+- Phase 2 Core Gameplay Mechanics implemented: InputManager captures drag input, GameplayUIController exposes lock toggles, shoot button, and spin control.
 
 ## Next Task
-- Phase 2: Core Gameplay Mechanics (Implement Input Manager for drag-to-aim and drag-for-power)
+- Phase 3: Trajectory & Physics Tuning (Implement basic trajectory prediction line)
 
 ## Blockers / Notes
 - None at the moment.

@@ -18,6 +18,7 @@
 - Delete dead code immediately
 - Avoid premature optimization
 - Avoid unnecessary abstractions
+- MUST use the new Unity Input System (`UnityEngine.InputSystem`), NEVER use the legacy `UnityEngine.Input` class.
 
 ### Structure
 - Follow standard Unity folder structure (`Assets/Scripts`, `Assets/Prefabs`, `Assets/Scenes`, etc.)

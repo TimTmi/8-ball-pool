@@ -6,10 +6,10 @@
 - [x] Configure basic Physics 2D settings for a pool table and balls
 
 ## Phase 2: Core Gameplay Mechanics
-- [ ] Implement Input Manager for drag-to-aim and drag-for-power
-- [ ] Add lock toggles for aim and power
-- [ ] Implement explicit "Shoot" button logic
-- [ ] Implement top-right spin control
+- [x] Implement Input Manager for drag-to-aim and drag-for-power
+- [x] Add lock toggles for aim and power
+- [x] Implement explicit "Shoot" button logic
+- [x] Implement top-right spin control
 
 ## Phase 3: Trajectory & Physics Tuning
 - [ ] Implement basic trajectory prediction line

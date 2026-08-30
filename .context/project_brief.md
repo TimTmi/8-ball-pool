@@ -7,6 +7,7 @@ A simple mobile 8 ball pool game (pass-and-play local multiplayer, no online fea
 - Unity (C#)
 - Mobile target (iOS/Android)
 - Unity Physics 2D
+- Unity Input System (new)
 
 ## Core Features
 - Local pass-and-play multiplayer
