@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using EightBall.UI;
+using EightBall.Gameplay;
 
 namespace EightBall.Core
 {
@@ -8,6 +9,7 @@ namespace EightBall.Core
     {
         [Header("Dependencies")]
         [SerializeField] private GameplayUIController _uiController;
+        private TableSetup _tableSetup;
 
         [Header("Sensitivity")]
         [SerializeField] private float _aimSensitivity = 0.5f;
@@ -25,6 +27,7 @@ namespace EightBall.Core
             {
                 _uiController.OnShootEvent += HandleShoot;
             }
+            _tableSetup = FindObjectOfType<TableSetup>();
         }
 
         private void OnDestroy()
@@ -38,6 +41,7 @@ namespace EightBall.Core
         private void Update()
         {
             HandleDragInput();
+            UpdateCueVisuals();
         }
 
         private void HandleDragInput()
@@ -48,6 +52,9 @@ namespace EightBall.Core
             // Simple touch/mouse input via new Input System
             if (pointer.press.wasPressedThisFrame)
             {
+                // Check if we are clicking on UI to prevent dragging?
+                // The new Input System usually handles UI clicks separately if we check for pointer over UI,
+                // but for now we follow the existing logic.
                 _isDragging = true;
                 _lastPointerPosition = pointer.position.ReadValue();
             }
@@ -93,6 +100,27 @@ namespace EightBall.Core
             }
         }
 
+        private void UpdateCueVisuals()
+        {
+            if (_tableSetup == null || _tableSetup.CueStick == null || _tableSetup.CueBall == null) return;
+
+            Transform cueStick = _tableSetup.CueStick.transform;
+            Transform cueBall = _tableSetup.CueBall.transform;
+
+            // Calculate the direction the player is aiming
+            Vector3 aimDir = Quaternion.Euler(0f, 0f, CurrentAimAngle) * Vector3.right;
+
+            // Cue stick is 8 units long, so center is 4 units from tip
+            float cueLength = 8f; 
+            float minDistance = (cueLength * 0.5f) + TableLayout.BallRadius + 0.1f;
+            float maxDistance = minDistance + 2.5f; // Pull back max 2.5 units
+            float currentDistance = Mathf.Lerp(minDistance, maxDistance, CurrentPower);
+
+            // Position cue stick behind the cue ball, pointing towards the aim direction
+            cueStick.position = cueBall.position - aimDir * currentDistance;
+            cueStick.rotation = Quaternion.Euler(0f, 0f, CurrentAimAngle);
+        }
+
         private void HandleShoot()
         {
             Debug.Log($"Executing Shoot! Angle: {CurrentAimAngle}, Power: {CurrentPower}");
@@ -101,6 +129,10 @@ namespace EightBall.Core
             
             // Reset for next turn
             CurrentPower = 0f;
+            if (_uiController != null)
+            {
+                _uiController.SetShootButtonActive(false);
+            }
         }
     }
 }
