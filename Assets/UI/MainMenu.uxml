@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ui="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements"
+    xsi:noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd">
+    
+    <ui:Style src="MainMenu.uss" />
+    
+    <ui:VisualElement class="main-container">
+        <ui:Label text="8 Ball Pool" class="title-label" />
+        <ui:Button name="play-button" text="Play" class="menu-button" />
+        <ui:Button name="credits-button" text="Credits" class="menu-button" />
+        <ui:Button name="quit-button" text="Quit" class="menu-button" />
+    </ui:VisualElement>
+</ui:UXML>

@@ -1,0 +1,58 @@
+.gameplay-container {
+    flex-grow: 1;
+    justify-content: space-between;
+}
+
+.top-bar {
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 20px;
+}
+
+.turn-label {
+    font-size: 30px;
+    -unity-font-style: bold;
+    color: white;
+}
+
+.spin-control-placeholder {
+    width: 100px;
+    height: 100px;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 50px;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.bottom-bar {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 20px;
+}
+
+.lock-toggles {
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 10px;
+    border-radius: 10px;
+}
+
+.lock-toggles > Toggle {
+    color: white;
+    font-size: 20px;
+}
+
+.shoot-button {
+    width: 150px;
+    height: 80px;
+    font-size: 30px;
+    -unity-font-style: bold;
+    background-color: rgb(200, 50, 50);
+    color: white;
+    border-radius: 40px;
+}
+
+.shoot-button:hover {
+    background-color: rgb(255, 50, 50);
+}
