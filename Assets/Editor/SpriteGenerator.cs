@@ -10,13 +10,13 @@ namespace EightBall.Editor
     /// </summary>
     public static class SpriteGenerator
     {
-        private const string OutputPath = "Assets/Textures";
+        private const string OutputPath = "Assets/Resources/Sprites";
         private const int PxPerUnit = 64;
 
         [MenuItem("Tools/8 Ball Pool/Generate Sprites")]
         public static void GenerateAll()
         {
-            Directory.CreateDirectory(Path.Combine(Application.dataPath, "Textures"));
+            Directory.CreateDirectory(Path.Combine(Application.dataPath, "Resources/Sprites"));
 
             GenerateTableFelt();
             GenerateRail();
@@ -198,7 +198,7 @@ namespace EightBall.Editor
         private static void SavePng(Texture2D tex, string name)
         {
             byte[] bytes = tex.EncodeToPNG();
-            string fullPath = Path.Combine(Application.dataPath, "Textures", name + ".png");
+            string fullPath = Path.Combine(Application.dataPath, "Resources/Sprites", name + ".png");
             File.WriteAllBytes(fullPath, bytes);
             Object.DestroyImmediate(tex);
         }
