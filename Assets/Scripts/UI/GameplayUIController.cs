@@ -15,6 +15,10 @@ namespace EightBall.UI
         /// <summary>Hit position on the cue ball face. x/y each in [-1, 1]. (0,0) = centre.</summary>
         public Vector2 CurrentSpin { get; private set; } = Vector2.zero;
 
+        /// <summary>True while the player is touching the spin button or dragging on the spin ball.
+        /// InputManager uses this to block aim/power changes during spin interaction.</summary>
+        public bool IsSpinInteracting { get; private set; }
+
         public event Action OnShootEvent;
 
         // ── UI element references ─────────────────────────────────────
@@ -66,7 +70,10 @@ namespace EightBall.UI
                 _shootButton.clicked -= OnShootClicked;
 
             if (_spinButton != null)
+            {
                 _spinButton.UnregisterCallback<PointerDownEvent>(OnSpinButtonPressed);
+                _spinButton.UnregisterCallback<PointerUpEvent>(OnSpinButtonReleased);
+            }
 
             if (_spinBall != null)
             {
@@ -109,6 +116,7 @@ namespace EightBall.UI
             if (_spinButton == null) return;
 
             _spinButton.RegisterCallback<PointerDownEvent>(OnSpinButtonPressed);
+            _spinButton.RegisterCallback<PointerUpEvent>(OnSpinButtonReleased);
 
             // Delay initial dot placement until layout is resolved
             _spinButton.RegisterCallback<GeometryChangedEvent>(_ => RefreshButtonDot());
@@ -138,7 +146,13 @@ namespace EightBall.UI
         private void OnSpinButtonPressed(PointerDownEvent evt)
         {
             evt.StopPropagation(); // Don't bubble to root close-handler
+            IsSpinInteracting = true;
             SetPanelOpen(!_panelOpen);
+        }
+
+        private void OnSpinButtonReleased(PointerUpEvent evt)
+        {
+            IsSpinInteracting = false;
         }
 
         // ── Expanded panel open/close ─────────────────────────────────
@@ -173,6 +187,7 @@ namespace EightBall.UI
         {
             evt.StopPropagation();
             _isDraggingHitPoint = true;
+            IsSpinInteracting = true;
             _spinBall.CapturePointer(evt.pointerId);
             UpdateSpinFromLocalPosition(evt.localPosition);
         }
@@ -187,6 +202,7 @@ namespace EightBall.UI
         {
             if (!_isDraggingHitPoint) return;
             _isDraggingHitPoint = false;
+            IsSpinInteracting = false;
             _spinBall.ReleasePointer(evt.pointerId);
         }
 

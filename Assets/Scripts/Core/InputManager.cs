@@ -49,29 +49,41 @@ namespace EightBall.Core
             var pointer = Pointer.current;
             if (pointer == null) return;
 
+            bool spinActive = _uiController != null && _uiController.IsSpinInteracting;
+
             // Simple touch/mouse input via new Input System
             if (pointer.press.wasPressedThisFrame)
             {
-                // Check if we are clicking on UI to prevent dragging?
-                // The new Input System usually handles UI clicks separately if we check for pointer over UI,
-                // but for now we follow the existing logic.
-                _isDragging = true;
-                _lastPointerPosition = pointer.position.ReadValue();
+                // Don't start an aim/power drag if the press landed on spin UI
+                if (!spinActive)
+                {
+                    _isDragging = true;
+                    _lastPointerPosition = pointer.position.ReadValue();
+                }
             }
             else if (pointer.press.isPressed && _isDragging)
             {
-                Vector2 currentPosition = pointer.position.ReadValue();
-                Vector2 delta = currentPosition - _lastPointerPosition;
-                _lastPointerPosition = currentPosition;
+                // Stop updating aim/power if the finger moved onto spin UI mid-drag
+                if (!spinActive)
+                {
+                    Vector2 currentPosition = pointer.position.ReadValue();
+                    Vector2 delta = currentPosition - _lastPointerPosition;
+                    _lastPointerPosition = currentPosition;
 
-                UpdateAimAndPower(delta);
+                    UpdateAimAndPower(delta);
+                }
+                else
+                {
+                    // Keep position in sync so there's no jump when spin interaction ends
+                    _lastPointerPosition = pointer.position.ReadValue();
+                }
             }
             else if (pointer.press.wasReleasedThisFrame)
             {
                 if (_isDragging)
                 {
                     _isDragging = false;
-                    
+
                     // Show shoot button if we actually aimed/powered up
                     if (_uiController != null)
                     {
