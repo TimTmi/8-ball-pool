@@ -1,8 +1,8 @@
 # Roadmap: 8 Ball Pool
 
 ## Phase 1: Foundation
-- [ ] Setup Unity Project & basic folder structure
-- [ ] Create simple Main Menu and Gameplay scenes
+- [x] Setup Unity Project & basic folder structure
+- [x] Create simple Main Menu and Gameplay scenes
 - [ ] Configure basic Physics 2D settings for a pool table and balls
 
 ## Phase 2: Core Gameplay Mechanics
