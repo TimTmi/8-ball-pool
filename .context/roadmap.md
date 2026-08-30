@@ -3,7 +3,7 @@
 ## Phase 1: Foundation
 - [x] Setup Unity Project & basic folder structure
 - [x] Create simple Main Menu and Gameplay scenes
-- [ ] Configure basic Physics 2D settings for a pool table and balls
+- [x] Configure basic Physics 2D settings for a pool table and balls
 
 ## Phase 2: Core Gameplay Mechanics
 - [ ] Implement Input Manager for drag-to-aim and drag-for-power
