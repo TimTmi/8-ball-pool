@@ -17,6 +17,7 @@
 - Locks cleared on turn end (2026-09-01): `GameplayUIController.UnlockAimAndPower()` unticks both lock toggles, called from `InputManager.HandleShoot` after a successful shot, so each new turn starts with aim and power unlocked.
 - Drag cancel zone (2026-09-01): `InputManager` snapshots aim/power/has-aim when a drag starts; while the pointer stays within `_cancelRadius` (serialized, default 0.6u) of the cue ball, aim and power revert to the snapshot, and releasing inside the zone cancels the drag (no shoot button). Dragging back out of the zone resumes aiming.
 - Power bar (2026-09-01): while dragging with power unlocked, a world-space bar (`PowerBar` component, spawned as a Table child by `TableSetup.SetupPowerBar`) floats below the cue ball and fills 0→1 with `CurrentPower`. `InputManager.UpdatePowerBar` owns visibility (dragging + not power-locked + table settled) and hides it otherwise.
+- Rail look reworked (2026-09-01): brighter wood rail (dark runtime tint removed from `TableSetup.SpawnRail`) plus a darker-green cushion pad strip (`RailCushion` sprite, `TableLayout.CushionPadThickness`) spawned on the felt-facing edge of each rail run by `TableSetup.SpawnCushionPad`; visual only, collider unchanged.
 
 ## Next Task
 - Complete Phase 3: Trajectory Prediction (Implement prediction line rendering and physics simulation ahead of the shot).

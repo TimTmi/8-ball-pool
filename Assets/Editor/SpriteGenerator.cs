@@ -20,6 +20,7 @@ namespace EightBall.Editor
 
             GenerateTableFelt();
             GenerateRail();
+            GenerateRailCushion();
             GeneratePocket();
             GenerateCueBall();
             GenerateBalls();
@@ -47,12 +48,23 @@ namespace EightBall.Editor
         {
             int w = 64, h = 26;
             var tex = new Texture2D(w, h, TextureFormat.RGBA32, false);
-            var railColor = new Color32(92, 56, 24, 255);
+            var railColor = new Color32(150, 102, 56, 255);
             Fill(tex, railColor);
             for (int x = 0; x < w; x++)
-                tex.SetPixel(x, h - 1, new Color32(130, 85, 40, 255));
+                tex.SetPixel(x, h - 1, new Color32(190, 140, 84, 255));
             tex.Apply();
             SavePng(tex, "Rail");
+        }
+
+        // ── Rail cushion pad: dark green strip on the rail's felt-facing side ──
+        private static void GenerateRailCushion()
+        {
+            int w = 64, h = 10;
+            var tex = new Texture2D(w, h, TextureFormat.RGBA32, false);
+            // Deliberately darker than the felt (26,107,60) so the pad reads as a separate surface
+            Fill(tex, new Color32(13, 64, 35, 255));
+            tex.Apply();
+            SavePng(tex, "RailCushion");
         }
 
         // ── Pocket: dark circle ────────────────────────────────────────────────

@@ -18,6 +18,7 @@ namespace EightBall.Gameplay
         [Header("Sprites — drag-assign from Assets/Textures or leave blank for runtime load")]
         [SerializeField] private Sprite _feltSprite;
         [SerializeField] private Sprite _railSprite;
+        [SerializeField] private Sprite _railCushionSprite;
         [SerializeField] private Sprite _pocketSprite;
         [SerializeField] private Sprite _cueStickSprite;
         [SerializeField] private Sprite[] _ballSprites; // Index 0=cue, 1–15 = balls 1–15
@@ -104,7 +105,8 @@ namespace EightBall.Gameplay
             sr.sprite = _railSprite;
             sr.drawMode = SpriteDrawMode.Simple;
             sr.sortingOrder = -9;
-            sr.color = new Color(0.36f, 0.22f, 0.09f);
+
+            SpawnCushionPad(railName, position, size);
 
             // Scale GO to match required rail size (Rail sprite is ~1u wide at PxPerUnit=64)
             Vector2 spriteSize = _railSprite != null ? (Vector2)_railSprite.bounds.size : Vector2.one;
@@ -123,6 +125,49 @@ namespace EightBall.Gameplay
 
             // Rails have to damp the rebound themselves — see Cushion for why the material can't.
             if (go.GetComponent<Cushion>() == null) go.AddComponent<Cushion>();
+        }
+
+        /// <summary>
+        /// Spawns the darker green cushion pad hugging the felt-facing edge of a rail run,
+        /// like the rubber cushion under the wooden rail on a real table.
+        /// Visual only — the rail's BoxCollider2D stays the full RailThickness.
+        /// </summary>
+        private void SpawnCushionPad(string railName, Vector2 railCenter, Vector2 railSize)
+        {
+            if (_railCushionSprite == null)
+                _railCushionSprite = LoadSprite("RailCushion");
+            if (_railCushionSprite == null) return;
+
+            bool isLongRail = railSize.x >= railSize.y;
+
+            float padThickness = TableLayout.CushionPadThickness;
+            Vector2 padSize = isLongRail
+                ? new Vector2(railSize.x, padThickness)
+                : new Vector2(padThickness, railSize.y);
+
+            // Inset the pad into the rail band so it sits flush against the felt edge,
+            // where the ball actually rebounds
+            Vector2 inward = isLongRail
+                ? new Vector2(0f, -Mathf.Sign(railCenter.y))
+                : new Vector2(-Mathf.Sign(railCenter.x), 0f);
+            Vector2 padCenter = railCenter + inward * ((TableLayout.RailThickness - padThickness) * 0.5f);
+
+            string padName = railName + "_Pad";
+            var existing = transform.Find(padName);
+            var go = existing != null ? existing.gameObject : new GameObject(padName);
+            go.transform.SetParent(transform, false);
+            go.transform.localPosition = padCenter;
+            go.transform.localRotation = Quaternion.identity;
+
+            var sr = go.GetComponent<SpriteRenderer>();
+            if (sr == null) sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = _railCushionSprite;
+            sr.drawMode = SpriteDrawMode.Simple;
+            sr.sortingOrder = -8; // above the rail, below pockets/balls
+
+            Vector2 spriteSize = _railCushionSprite.bounds.size;
+            if (spriteSize.x > 0f && spriteSize.y > 0f)
+                go.transform.localScale = new Vector3(padSize.x / spriteSize.x, padSize.y / spriteSize.y, 1f);
         }
 
         // ── Pockets ───────────────────────────────────────────────────────────

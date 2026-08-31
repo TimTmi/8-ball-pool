@@ -15,6 +15,9 @@ namespace EightBall.Gameplay
         // Rail thickness
         public const float RailThickness = 0.4f;
 
+        // Thickness of the green cushion pad on the felt-facing side of each rail
+        public const float CushionPadThickness = 0.15f;
+
         // Ball
         public const float BallRadius   = 0.25f;
         public const float BallDiameter = BallRadius * 2f;
