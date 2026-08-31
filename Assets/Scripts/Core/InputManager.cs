@@ -257,6 +257,7 @@ namespace EightBall.Core
             {
                 _uiController.SetShootButtonActive(false);
                 _uiController.UnlockAimAndPower();
+                _uiController.SetInputHudVisible(false);
             }
         }
 
@@ -264,6 +265,7 @@ namespace EightBall.Core
         {
             if (_uiController != null && _turnManager != null)
             {
+                _uiController.SetInputHudVisible(true);
                 _uiController.SetTurnLabelText($"{_turnManager.CurrentPlayerName}'s Turn");
             }
         }

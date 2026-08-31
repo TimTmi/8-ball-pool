@@ -17,7 +17,7 @@
             </ui:VisualElement>
         </ui:VisualElement>
 
-        <ui:VisualElement class="bottom-bar">
+        <ui:VisualElement name="bottom-bar" class="bottom-bar">
             <ui:VisualElement class="lock-toggles">
                 <ui:Toggle name="lock-aim-toggle" label="Lock Aim" />
                 <ui:Toggle name="lock-power-toggle" label="Lock Power" />

@@ -28,6 +28,7 @@ namespace EightBall.UI
         private Toggle _lockAimToggle;
         private Toggle _lockPowerToggle;
         private Label _turnLabel;
+        private VisualElement _bottomBar;
 
         // Compact cue ball button
         private VisualElement _spinButton;
@@ -65,6 +66,7 @@ namespace EightBall.UI
             BindSpinButton();
             BindSpinPanel();
             _turnLabel = _root.Q<Label>("player-turn-label");
+            _bottomBar = _root.Q<VisualElement>("bottom-bar");
         }
 
         private void OnDisable()
@@ -111,6 +113,24 @@ namespace EightBall.UI
 
             if (_lockAimToggle != null) _lockAimToggle.SetValueWithoutNotify(false);
             if (_lockPowerToggle != null) _lockPowerToggle.SetValueWithoutNotify(false);
+        }
+
+        /// <summary>
+        /// Shows or hides the interactive input HUD (lock toggles, shoot button, spin
+        /// button). The turn label stays visible. Hiding also closes the spin panel.
+        /// </summary>
+        public void SetInputHudVisible(bool visible)
+        {
+            var display = visible ? DisplayStyle.Flex : DisplayStyle.None;
+
+            if (_bottomBar != null) _bottomBar.style.display = display;
+            if (_spinButton != null) _spinButton.style.display = display;
+
+            if (!visible)
+            {
+                SetPanelOpen(false);
+                SetShootButtonActive(false);
+            }
         }
 
         /// <summary>Sets the top-bar label naming the player whose turn it is.</summary>
