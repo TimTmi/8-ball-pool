@@ -21,6 +21,8 @@ namespace EightBall.Core
 
         private Camera _camera;
         private bool _isDragging;
+        /// <summary>True once the player has aimed during the current turn; the cue only shows then.</summary>
+        private bool _hasAim;
 
         /// <summary>Aiming is only allowed once every ball has come to rest.</summary>
         private bool CanAim => _cueController == null || _cueController.IsTableSettled;
@@ -120,6 +122,8 @@ namespace EightBall.Core
             // Too close to give a meaningful direction; keep the last aim angle
             if (toBall.sqrMagnitude < 0.0001f) return;
 
+            _hasAim = true;
+
             if (!_uiController.IsAimLocked)
             {
                 CurrentAimAngle = Mathf.Atan2(toBall.y, toBall.x) * Mathf.Rad2Deg;
@@ -139,10 +143,10 @@ namespace EightBall.Core
 
             GameObject cueStick = _tableSetup.CueStick;
 
-            // The cue is only on the table while the player is aiming
-            bool isAiming = CanAim;
-            if (cueStick.activeSelf != isAiming) cueStick.SetActive(isAiming);
-            if (!isAiming) return;
+            // The cue is only on the table once the player has aimed during this turn
+            bool showCue = CanAim && _hasAim;
+            if (cueStick.activeSelf != showCue) cueStick.SetActive(showCue);
+            if (!showCue) return;
 
             Transform cueBall = _tableSetup.CueBall.transform;
 
@@ -171,8 +175,9 @@ namespace EightBall.Core
 
             if (!_cueController.Shoot(CurrentAimAngle, CurrentPower)) return;
 
-            // Reset for next turn
+            // Reset for next turn: no power and no cue until the player aims again
             CurrentPower = 0f;
+            _hasAim = false;
             if (_uiController != null)
             {
                 _uiController.SetShootButtonActive(false);
