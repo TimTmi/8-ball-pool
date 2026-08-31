@@ -240,7 +240,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 3
+  orthographic size: 4
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
@@ -424,8 +424,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EightBall.Core.InputManager
   _uiController: {fileID: 1302044208}
-  _aimSensitivity: 0.5
-  _powerSensitivity: 0.002
+  _maxPullDistance: 2.5
 --- !u!4 &1973044489
 Transform:
   m_ObjectHideFlags: 0
