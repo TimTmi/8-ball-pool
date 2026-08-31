@@ -18,6 +18,7 @@
 - Delete dead code immediately
 - Avoid premature optimization
 - Avoid unnecessary abstractions
+- MUST use the new Unity Input System (`UnityEngine.InputSystem`), NEVER use the legacy `UnityEngine.Input` class.
 
 ### Structure
 - Follow standard Unity folder structure (`Assets/Scripts`, `Assets/Prefabs`, `Assets/Scenes`, etc.)
@@ -50,6 +51,7 @@
 - Check for null references especially with Unity components (`GetComponent`, `Find`)
 
 ### Testing
+- Play-testing is done by the user, never by the agent — do not claim changes are play-tested; mark untested work clearly
 - Critical business logic (like 8-ball rules) should be decoupled from Unity `MonoBehaviour` where possible to allow unit testing
 
 ### Refactor Triggers

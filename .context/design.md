@@ -4,11 +4,14 @@
 Monolithic Unity client architecture. The game uses a scene-based flow consisting of a Main Menu scene and a Gameplay scene. The core loop will rely on a Game State Machine to manage the progression of turns, physics simulation, and player input. 
 
 ## Components
-- **Input Manager**: Captures raw touch/drag input and translates it to aim angle, power, and spin. Controls the lock states for aim and power.
-- **Trajectory Predictor**: Simulates physics steps ahead of time to render the predicted path of the cue ball and object balls, incorporating spin and collisions.
-- **Physics Engine (Unity)**: Handles runtime collision detection and rigidbody physics for the balls.
-- **Game State Manager**: Enforces standard 8-ball rules (legal breaks, valid hits, pocketing logic, win/loss conditions) and switches turns between the two local players.
-- **UI Controller**: Manages minimal screens. Gameplay UI includes lock toggles, spin control UI, and the Shoot confirmation button.
+Status is marked per component; unmarked bullet details describe the target design.
+
+- **Input Manager** *(implemented: `InputManager.cs`)*: Captures raw touch/drag input and translates it to aim angle, power, and spin. Controls the lock states for aim and power.
+- **Trajectory Predictor** *(planned, Phase 3)*: Simulates physics steps ahead of time to render the predicted path of the cue ball and object balls, incorporating spin and collisions.
+- **Physics Engine (Unity)** *(implemented)*: Handles runtime collision detection and rigidbody physics for the balls. Shot execution lives in `CueController`/`Ball`; cushion rebound damping in `Cushion`.
+- **Game State Manager** *(planned, Phase 4)*: Enforces standard 8-ball rules (legal breaks, valid hits, pocketing logic, win/loss conditions) and switches turns between the two local players.
+- **UI Controller** *(implemented: `GameplayUIController.cs`, `MainMenuController.cs`)*: Manages minimal screens. Gameplay UI includes lock toggles, spin control UI, and the Shoot confirmation button.
+- **Table Setup & Layout** *(implemented)*: A procedural approach (`TableSetup.cs`) builds the physics and visual elements of the table at runtime (balls, cushions, pockets) using strict mathematical constants (`TableLayout.cs`) for precise physical placement.
 
 ## Communication
 - User input triggers UI state changes (e.g., revealing the Shoot button).

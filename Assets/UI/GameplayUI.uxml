@@ -9,18 +9,33 @@
     <ui:VisualElement class="gameplay-container">
         <ui:VisualElement class="top-bar">
             <ui:Label name="player-turn-label" text="Player 1's Turn" class="turn-label" />
-            <ui:VisualElement class="spin-control-placeholder">
-                <ui:Label text="Spin" />
+
+            <!-- Compact cue ball button — always visible in top-right -->
+            <ui:VisualElement name="spin-button" class="spin-button">
+                <!-- Hit position indicator dot -->
+                <ui:VisualElement name="spin-button-dot" class="spin-button-dot" />
             </ui:VisualElement>
         </ui:VisualElement>
-        
-        <ui:VisualElement class="bottom-bar">
+
+        <ui:VisualElement name="bottom-bar" class="bottom-bar">
             <ui:VisualElement class="lock-toggles">
                 <ui:Toggle name="lock-aim-toggle" label="Lock Aim" />
                 <ui:Toggle name="lock-power-toggle" label="Lock Power" />
             </ui:VisualElement>
-            
+
             <ui:Button name="shoot-button" text="SHOOT" class="shoot-button" />
         </ui:VisualElement>
+    </ui:VisualElement>
+
+    <!-- Expanded spin panel — absolute overlay, anchored top-right, hidden by default -->
+    <ui:VisualElement name="spin-panel" class="spin-panel spin-panel--hidden">
+        <!-- Cue ball face the player drags on -->
+        <ui:VisualElement name="spin-ball" class="spin-ball">
+            <!-- Ball shine highlights -->
+            <ui:VisualElement class="spin-ball-shine" />
+            <!-- Draggable hit-point indicator -->
+            <ui:VisualElement name="spin-hit-dot" class="spin-hit-dot" />
+        </ui:VisualElement>
+        <ui:Label class="spin-panel-label" text="Hit Point" />
     </ui:VisualElement>
 </ui:UXML>

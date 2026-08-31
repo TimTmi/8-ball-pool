@@ -197,6 +197,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1305644857}
   - component: {fileID: 1305644856}
+  - component: {fileID: 1305644858}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -214,7 +215,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 1
-  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_BackGroundColor: {r: 0.07, g: 0.07, b: 0.07, a: 1}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -239,7 +240,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 5
+  orthographic size: 4
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
@@ -264,12 +265,56 @@ Transform:
   m_GameObject: {fileID: 1305644855}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1305644858
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1305644855}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a79441f348de89743a2939f4d699eac1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalAdditionalCameraData
+  m_RenderShadows: 1
+  m_RequiresDepthTextureOption: 2
+  m_RequiresOpaqueTextureOption: 2
+  m_CameraType: 0
+  m_Cameras: []
+  m_RendererIndex: -1
+  m_VolumeLayerMask:
+    serializedVersion: 2
+    m_Bits: 1
+  m_VolumeTrigger: {fileID: 0}
+  m_VolumeFrameworkUpdateModeOption: 2
+  m_RenderPostProcessing: 0
+  m_Antialiasing: 0
+  m_AntialiasingQuality: 2
+  m_StopNaN: 0
+  m_Dithering: 0
+  m_ClearDepth: 1
+  m_AllowXRRendering: 1
+  m_AllowHDROutput: 1
+  m_UseScreenCoordOverride: 0
+  m_ScreenSizeOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_ScreenCoordScaleBias: {x: 0, y: 0, z: 0, w: 0}
+  m_RequiresDepthTexture: 0
+  m_RequiresColorTexture: 0
+  m_TaaSettings:
+    m_Quality: 3
+    m_FrameInfluence: 0.1
+    m_JitterScale: 1
+    m_MipBias: 0
+    m_VarianceClampScale: 0.9
+    m_ContrastAdaptiveSharpening: 0
+  m_Version: 2
 --- !u!1 &1660373452
 GameObject:
   m_ObjectHideFlags: 0
@@ -349,6 +394,53 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1973044487
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1973044489}
+  - component: {fileID: 1973044488}
+  m_Layer: 0
+  m_Name: InputManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1973044488
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1973044487}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 745991b28e0235660853116cbfb9c507, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EightBall.Core.InputManager
+  _uiController: {fileID: 1302044208}
+  _maxPullDistance: 2.5
+  _cancelRadius: 0.6
+--- !u!4 &1973044489
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1973044487}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2063585313
 GameObject:
   m_ObjectHideFlags: 0
@@ -359,6 +451,8 @@ GameObject:
   m_Component:
   - component: {fileID: 2063585315}
   - component: {fileID: 2063585314}
+  - component: {fileID: 2063585316}
+  - component: {fileID: 2063585317}
   m_Layer: 0
   m_Name: Table
   m_TagString: Untagged
@@ -441,6 +535,56 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2063585316
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2063585313}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 32a23d5c2119414f8bcfb942e75d2802, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EightBall.Gameplay.TableSetup
+  _ballPrefab: {fileID: 3676500227632088201, guid: 1767c0f784ba5e8d4be4365470e36122, type: 3}
+  _pocketPrefab: {fileID: 3427833403902320882, guid: 34e02c97701dc5fc1a6ec1d3de4c7704, type: 3}
+  _cushionPrefab: {fileID: 5619856606312520710, guid: 16184f62e7f869c5ea0671ce412157d1, type: 3}
+  _feltSprite: {fileID: 21300000, guid: eb83366749820e6f19eb581a1a02590b, type: 3}
+  _railSprite: {fileID: 21300000, guid: 5eb8c0dcbf5cc26e3a2a52a7b03d99fd, type: 3}
+  _railCornerSprite: {fileID: 21300000, guid: 3e6686a01606291d4b136b7796864cb0, type: 3}
+  _railCushionSprite: {fileID: 21300000, guid: 7c9f7c790591181adb9565873f3cf5df, type: 3}
+  _pocketSprite: {fileID: 21300000, guid: fa5679ae3e44c2943b6742fbbcf37ec9, type: 3}
+  _cueStickSprite: {fileID: 21300000, guid: 364a5494a34f9bc60b547dc42aea59e8, type: 3}
+  _ballSprites: []
+  _ballPhysicsMaterial: {fileID: 0}
+  _cushionPhysicsMaterial: {fileID: 6200000, guid: 815c1a3deebc2e8728ebc04873e323e5, type: 2}
+--- !u!114 &2063585317
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2063585313}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3c8f1a05d2e47b69c8d0e1f2a3b4c5d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EightBall.Gameplay.CueController
+  _minShotSpeed: 3
+  _maxShotSpeed: 26
+--- !u!114 &2063585318
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2063585313}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::EightBall.Gameplay.TurnManager
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -449,3 +593,4 @@ SceneRoots:
   - {fileID: 1302044210}
   - {fileID: 1660373455}
   - {fileID: 2063585315}
+  - {fileID: 1973044489}
