@@ -15,9 +15,10 @@ namespace EightBall.UI
         /// <summary>Hit position on the cue ball face. x/y each in [-1, 1]. (0,0) = centre.</summary>
         public Vector2 CurrentSpin { get; private set; } = Vector2.zero;
 
-        /// <summary>True while the player is touching the spin button or dragging on the spin ball.
-        /// InputManager uses this to block aim/power changes during spin interaction.</summary>
-        public bool IsSpinInteracting { get; private set; }
+        /// <summary>True while the current pointer press belongs to the HUD — it started on an
+        /// interactive HUD element or was used to close the spin panel. InputManager uses this
+        /// to keep table aim/power from reacting to HUD presses.</summary>
+        public bool IsPointerPressOnUI { get; private set; }
 
         public event Action OnShootEvent;
 
@@ -70,12 +71,7 @@ namespace EightBall.UI
                 _shootButton.clicked -= OnShootClicked;
 
             if (_spinButton != null)
-            {
                 _spinButton.UnregisterCallback<PointerDownEvent>(OnSpinButtonPressed);
-                _spinButton.UnregisterCallback<PointerUpEvent>(OnSpinButtonReleased);
-                _spinButton.UnregisterCallback<PointerLeaveEvent>(OnSpinButtonReleased);
-                _spinButton.UnregisterCallback<PointerCancelEvent>(OnSpinButtonReleased);
-            }
 
             if (_spinBall != null)
             {
@@ -87,7 +83,11 @@ namespace EightBall.UI
             }
 
             if (_root != null)
+            {
                 _root.UnregisterCallback<PointerDownEvent>(OnRootPointerDown, TrickleDown.TrickleDown);
+                _root.UnregisterCallback<PointerUpEvent>(OnRootPointerReleased, TrickleDown.TrickleDown);
+                _root.UnregisterCallback<PointerCancelEvent>(OnRootPointerReleased, TrickleDown.TrickleDown);
+            }
         }
 
         // ── Binding helpers ───────────────────────────────────────────
@@ -120,9 +120,6 @@ namespace EightBall.UI
             if (_spinButton == null) return;
 
             _spinButton.RegisterCallback<PointerDownEvent>(OnSpinButtonPressed);
-            _spinButton.RegisterCallback<PointerUpEvent>(OnSpinButtonReleased);
-            _spinButton.RegisterCallback<PointerLeaveEvent>(OnSpinButtonReleased);
-            _spinButton.RegisterCallback<PointerCancelEvent>(OnSpinButtonReleased);
 
             // Delay initial dot placement until layout is resolved
             _spinButton.RegisterCallback<GeometryChangedEvent>(_ => RefreshButtonDot());
@@ -145,22 +142,17 @@ namespace EightBall.UI
             // Delay initial hit-dot placement until layout is resolved
             _spinBall.RegisterCallback<GeometryChangedEvent>(_ => RefreshHitDot());
 
-            // Close panel when clicking anywhere outside it
+            // Close panel when clicking anywhere outside it, and track which presses the HUD owns
             _root.RegisterCallback<PointerDownEvent>(OnRootPointerDown, TrickleDown.TrickleDown);
+            _root.RegisterCallback<PointerUpEvent>(OnRootPointerReleased, TrickleDown.TrickleDown);
+            _root.RegisterCallback<PointerCancelEvent>(OnRootPointerReleased, TrickleDown.TrickleDown);
         }
 
         // ── Compact spin button ───────────────────────────────────────
 
         private void OnSpinButtonPressed(PointerDownEvent evt)
         {
-            evt.StopPropagation(); // Don't bubble to root close-handler
-            IsSpinInteracting = true;
             SetPanelOpen(!_panelOpen);
-        }
-
-        private void OnSpinButtonReleased(EventBase evt)
-        {
-            IsSpinInteracting = false;
         }
 
         // ── Expanded panel open/close ─────────────────────────────────
@@ -177,25 +169,50 @@ namespace EightBall.UI
                 _spinPanel.AddToClassList("spin-panel--hidden");
         }
 
-        /// <summary>Close panel when the player taps anywhere outside it.</summary>
+        /// <summary>
+        /// Root-level press handler: closes the panel on a tap outside it and marks
+        /// presses the HUD owns so InputManager ignores them for aim/power.
+        /// </summary>
         private void OnRootPointerDown(PointerDownEvent evt)
         {
+            var target = evt.target as VisualElement;
+
+            IsPointerPressOnUI = IsOverInteractiveElement(target) || _panelOpen;
+
             if (!_panelOpen) return;
 
-            // If the click target is inside the panel, keep it open
-            if (_spinPanel != null && _spinPanel.Contains(evt.target as VisualElement))
-                return;
+            // The spin button toggles the panel itself; pressing the panel keeps it open
+            if (_spinButton != null && _spinButton.Contains(target)) return;
+            if (_spinPanel != null && _spinPanel.Contains(target)) return;
 
             SetPanelOpen(false);
+        }
+
+        private void OnRootPointerReleased(EventBase evt)
+        {
+            IsPointerPressOnUI = false;
+        }
+
+        /// <summary>True when the pressed element sits inside an interactive HUD element.</summary>
+        private bool IsOverInteractiveElement(VisualElement target)
+        {
+            while (target != null)
+            {
+                if (target == _shootButton || target == _lockAimToggle || target == _lockPowerToggle
+                    || target == _spinButton || target == _spinPanel)
+                {
+                    return true;
+                }
+                target = target.parent;
+            }
+            return false;
         }
 
         // ── Hit-point drag on the large ball ─────────────────────────
 
         private void OnHitPointPointerDown(PointerDownEvent evt)
         {
-            evt.StopPropagation();
             _isDraggingHitPoint = true;
-            IsSpinInteracting = true;
             _spinBall.CapturePointer(evt.pointerId);
             UpdateSpinFromLocalPosition(evt.localPosition);
         }
@@ -210,8 +227,7 @@ namespace EightBall.UI
         {
             if (!_isDraggingHitPoint) return;
             _isDraggingHitPoint = false;
-            IsSpinInteracting = false;
-            
+
             if (evt is PointerUpEvent pointerUp)
                 _spinBall.ReleasePointer(pointerUp.pointerId);
             else if (evt is PointerLeaveEvent pointerLeave)

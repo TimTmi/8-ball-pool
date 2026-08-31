@@ -12,6 +12,7 @@
 - **Phase 4 (Partial): Pocketing** - The rails are now six runs with a mouth at every pocket, so balls can physically enter one. `Pocket` captures a ball when its centre reaches the hole; `Ball.Drop()` takes it out of play with a short sink. A scratched cue ball is returned to the head spot once the table settles.
 - Aim/power controls rewritten (2026-08-31, same-side scheme): aim angle = direction from pointer through the cue ball (finger drags on the cue's side, pull-back style), power = pointer-to-cue-ball distance (full power at `TableLayout.HalfFeltWidth`, tunable via `_maxPowerDistance`). Replaces the old drag-delta scheme.
 - Cue sprite orientation fixed (2026-08-31): cue art now has the tip (chalk) on the right (+X), matching the runtime assumption that the sprite's +X axis points at the cue ball (`InputManager.UpdateCueVisuals`). Previously the butt faced the ball.
+- HUD press isolation fixed (2026-08-31): `GameplayUIController.IsPointerPressOnUI` marks presses that belong to the HUD (shoot button, lock toggles, spin button/panel, or the tap that closes the spin panel); `InputManager` ignores them for aim/power. Replaces the narrower `IsSpinInteracting` flag, which is deleted.
 
 ## Next Task
 - Complete Phase 3: Trajectory Prediction (Implement prediction line rendering and physics simulation ahead of the shot).

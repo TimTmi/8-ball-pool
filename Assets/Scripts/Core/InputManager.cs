@@ -62,21 +62,27 @@ namespace EightBall.Core
             var pointer = Pointer.current;
             if (pointer == null) return;
 
-            bool spinActive = _uiController != null && _uiController.IsSpinInteracting;
+            // The HUD reports presses it owns (on HUD elements, or used to close the spin panel)
+            bool pressOnUI = _uiController != null && _uiController.IsPointerPressOnUI;
 
             // Simple touch/mouse input via new Input System
             if (pointer.press.wasPressedThisFrame)
             {
-                // Don't start an aim/power drag if the press landed on spin UI
-                if (!spinActive)
+                // Don't start an aim/power drag if the press landed on the HUD
+                if (!pressOnUI)
                 {
                     _isDragging = true;
                 }
             }
             else if (pointer.press.isPressed && _isDragging)
             {
-                // Stop updating aim/power if the finger moved onto spin UI mid-drag
-                if (!spinActive)
+                // A press the HUD claims (including one that landed on it a frame late)
+                // never becomes an aim/power drag
+                if (pressOnUI)
+                {
+                    _isDragging = false;
+                }
+                else
                 {
                     UpdateAimAndPower(pointer.position.ReadValue());
                 }
