@@ -13,8 +13,8 @@ namespace EightBall.Core
         private CueController _cueController;
 
         [Header("Power")]
-        [Tooltip("Pointer distance from the cue ball (world units) that corresponds to full power.")]
-        [SerializeField] private float _maxPowerDistance = TableLayout.HalfFeltWidth;
+        [Tooltip("Max cue pull-back distance (world units). Pointer distance from the cue ball maps 1:1 to the cue pull and is clamped here; full power is reached at this distance.")]
+        [SerializeField] private float _maxPullDistance = 2.5f;
 
         public float CurrentAimAngle { get; private set; }
         public float CurrentPower { get; private set; } // Normalized 0 to 1
@@ -127,7 +127,9 @@ namespace EightBall.Core
 
             if (!_uiController.IsPowerLocked)
             {
-                CurrentPower = Mathf.Clamp01(toBall.magnitude / _maxPowerDistance);
+                // Pointer distance pulls the cue back 1:1, capped at max pull
+                float pullDistance = Mathf.Min(toBall.magnitude, _maxPullDistance);
+                CurrentPower = pullDistance / _maxPullDistance;
             }
         }
 
@@ -148,9 +150,10 @@ namespace EightBall.Core
             Vector3 aimDir = Quaternion.Euler(0f, 0f, CurrentAimAngle) * Vector3.right;
 
             // Cue stick is 8 units long, so center is 4 units from tip
-            float cueLength = 8f; 
+            float cueLength = 8f;
             float minDistance = (cueLength * 0.5f) + TableLayout.BallRadius + 0.1f;
-            float maxDistance = minDistance + 2.5f; // Pull back max 2.5 units
+            // Full power = cue pulled back by _maxPullDistance, matching the 1:1 pointer mapping
+            float maxDistance = minDistance + _maxPullDistance;
             float currentDistance = Mathf.Lerp(minDistance, maxDistance, CurrentPower);
 
             // Position cue stick behind the cue ball, pointing towards the aim direction
