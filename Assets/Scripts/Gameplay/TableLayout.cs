@@ -58,7 +58,7 @@ namespace EightBall.Gameplay
         /// <summary>
         /// One straight run of rail. <see cref="Center"/>/<see cref="Size"/> is the cushion-only
         /// span that the collider and cushion pad use; <see cref="VisualCenter"/>/<see cref="VisualSize"/>
-        /// is the wooden run, which extends past the pockets to join its neighbours.
+        /// is the wooden run, which extends past the pockets (to the felt edges at the corners).
         /// </summary>
         public readonly struct RailSegment
         {
@@ -95,15 +95,16 @@ namespace EightBall.Gameplay
 
             float sideLength = FeltHeight - PocketMouthHalfWidth * 2f;
 
-            // Left-hand long runs stretch from the table's outer edge to the mid-pocket centre;
-            // right-hand runs mirror them. Side runs stretch corner to corner.
-            float longVisualLength = HalfFeltWidth + RailThickness;
-            float longVisualCenterX = longVisualLength / 2f; // magnitude; left runs are negative
+            // Left-hand long runs stretch from the felt's outer edge to the mid-pocket centre;
+            // right-hand runs mirror them. Side runs stretch corner to corner. The runs stop at
+            // the felt edges — the corner caps (TableSetup.SetupRailCorners) close and round
+            // the corners, so the wood must not extend underneath them.
+            float longVisualLength = HalfFeltWidth;
 
             var longSize = new Vector2(longLength, RailThickness);
             var sideSize = new Vector2(RailThickness, sideLength);
             var longVisualSize = new Vector2(longVisualLength, RailThickness);
-            var sideVisualSize = new Vector2(RailThickness, FeltHeight + RailThickness * 2f);
+            var sideVisualSize = new Vector2(RailThickness, FeltHeight);
 
             return new[]
             {
