@@ -51,8 +51,6 @@ namespace EightBall.Editor
             var tex = new Texture2D(w, h, TextureFormat.RGBA32, false);
             var railColor = new Color32(150, 102, 56, 255);
             Fill(tex, railColor);
-            for (int x = 0; x < w; x++)
-                tex.SetPixel(x, h - 1, new Color32(190, 140, 84, 255));
             tex.Apply();
             SavePng(tex, "Rail");
         }
@@ -67,7 +65,6 @@ namespace EightBall.Editor
             int radius = 16; // 0.25u rounding of the outer corner
             var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
             var railColor = new Color32(150, 102, 56, 255);
-            var highlight = new Color32(190, 140, 84, 255);
             Fill(tex, railColor);
 
             // Cut the top-right corner: outside the corner region keep the wood,
@@ -81,8 +78,6 @@ namespace EightBall.Editor
                     int distSq = dx * dx + dy * dy;
                     if (distSq > radius * radius)
                         tex.SetPixel(x, y, Color.clear);
-                    else if (distSq > (radius - 2) * (radius - 2))
-                        tex.SetPixel(x, y, highlight); // lit outer edge, like the rail's top line
                 }
             }
             tex.Apply();
