@@ -110,9 +110,10 @@ namespace EightBall.Editor
             var tex = new Texture2D(w, h, TextureFormat.RGBA32, false);
             Fill(tex, Color.clear);
 
+            // Tip at the right (+X): runtime code points the sprite's +X axis at the cue ball
             for (int x = 0; x < w; x++)
             {
-                float t = (float)x / w;
+                float t = 1f - (float)x / w;
                 byte r = (byte)Mathf.Lerp(220, 100, t);
                 byte g = (byte)Mathf.Lerp(180, 60, t);
                 byte b = (byte)Mathf.Lerp(100, 30, t);
@@ -126,8 +127,8 @@ namespace EightBall.Editor
                 }
             }
 
-            // Blue chalk tip
-            for (int x = 0; x < 16; x++)
+            // Blue chalk tip (right end)
+            for (int x = w - 16; x < w; x++)
             {
                 int center = h / 2;
                 for (int y = center - 1; y <= center + 1; y++)
