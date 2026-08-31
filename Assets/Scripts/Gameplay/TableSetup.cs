@@ -84,20 +84,21 @@ namespace EightBall.Gameplay
             if (_railSprite == null)
                 _railSprite = LoadSprite("Rail");
 
-            // Rails come in six runs with a gap at every pocket, so balls can enter the mouths.
+            // Six runs of wood that join past the pockets into one closed frame;
+            // the collider keeps the mouths open so balls can enter.
             foreach (TableLayout.RailSegment segment in TableLayout.GetRailSegments())
             {
-                SpawnRail(segment.Name, segment.Center, segment.Size);
+                SpawnRail(segment);
             }
         }
 
-        private void SpawnRail(string railName, Vector2 position, Vector2 size)
+        private void SpawnRail(TableLayout.RailSegment segment)
         {
             // Reuse existing child if rebuilding
-            var existing = transform.Find(railName);
-            var go = existing != null ? existing.gameObject : new GameObject(railName);
+            var existing = transform.Find(segment.Name);
+            var go = existing != null ? existing.gameObject : new GameObject(segment.Name);
             go.transform.SetParent(transform, false);
-            go.transform.localPosition = position;
+            go.transform.localPosition = segment.VisualCenter;
             go.transform.localRotation = Quaternion.identity;
 
             var sr = go.GetComponent<SpriteRenderer>();
@@ -106,19 +107,23 @@ namespace EightBall.Gameplay
             sr.drawMode = SpriteDrawMode.Simple;
             sr.sortingOrder = -9;
 
-            SpawnCushionPad(railName, position, size);
+            SpawnCushionPad(segment.Name, segment.Center, segment.Size);
 
-            // Scale GO to match required rail size (Rail sprite is ~1u wide at PxPerUnit=64)
+            // Scale GO to the full wooden run, pockets included (Rail sprite is ~1u wide at PxPerUnit=64)
             Vector2 spriteSize = _railSprite != null ? (Vector2)_railSprite.bounds.size : Vector2.one;
             if (spriteSize.x > 0f && spriteSize.y > 0f)
-                go.transform.localScale = new Vector3(size.x / spriteSize.x, size.y / spriteSize.y, 1f);
+                go.transform.localScale = new Vector3(segment.VisualSize.x / spriteSize.x, segment.VisualSize.y / spriteSize.y, 1f);
 
             var col = go.GetComponent<BoxCollider2D>();
             if (col == null) col = go.AddComponent<BoxCollider2D>();
-            // The transform scale maps the sprite's bounds onto `size`, so the box has to be
-            // authored in sprite-bounds units to come out exactly `size` in world space.
+            // The transform scale maps the sprite's bounds onto the visual size, so the box has to be
+            // authored in sprite-bounds units to come out exactly the cushion span in world space.
+            // It is offset from the sprite centre by the run's extension over the pockets.
             Vector3 railScale = go.transform.localScale;
-            col.size = new Vector2(ToLocal(size.x, railScale.x), ToLocal(size.y, railScale.y));
+            col.size = new Vector2(ToLocal(segment.Size.x, railScale.x), ToLocal(segment.Size.y, railScale.y));
+            col.offset = new Vector2(
+                ToLocal(segment.Center.x - segment.VisualCenter.x, railScale.x),
+                ToLocal(segment.Center.y - segment.VisualCenter.y, railScale.y));
             col.isTrigger = false;
 
             if (_cushionPhysicsMaterial != null) col.sharedMaterial = _cushionPhysicsMaterial;

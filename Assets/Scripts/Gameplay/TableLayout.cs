@@ -55,31 +55,39 @@ namespace EightBall.Gameplay
         // Wide enough for a ball to roll in, narrow enough that the rails still play like cushions.
         public const float PocketMouthHalfWidth = 0.45f;
 
-        /// <summary>One straight run of rail between two pocket mouths.</summary>
+        /// <summary>
+        /// One straight run of rail. <see cref="Center"/>/<see cref="Size"/> is the cushion-only
+        /// span that the collider and cushion pad use; <see cref="VisualCenter"/>/<see cref="VisualSize"/>
+        /// is the wooden run, which extends past the pockets to join its neighbours.
+        /// </summary>
         public readonly struct RailSegment
         {
             public readonly string Name;
             public readonly Vector2 Center;
             public readonly Vector2 Size;
+            public readonly Vector2 VisualCenter;
+            public readonly Vector2 VisualSize;
 
-            public RailSegment(string name, Vector2 center, Vector2 size)
+            public RailSegment(string name, Vector2 center, Vector2 size, Vector2 visualCenter, Vector2 visualSize)
             {
                 Name = name;
                 Center = center;
                 Size = size;
+                VisualCenter = visualCenter;
+                VisualSize = visualSize;
             }
         }
 
         /// <summary>
-        /// The six rail runs, with a gap left at every pocket so a ball can actually enter one.
-        /// Long rails run corner-to-mid pocket; side rails run corner-to-corner.
+        /// The six rail runs. The collider keeps a gap at every pocket so a ball can enter one,
+        /// but the wood itself runs on past the pockets so the frame closes around the holes.
         /// </summary>
         public static RailSegment[] GetRailSegments()
         {
             float longRailY = (FeltHeight + RailThickness) / 2f;
             float sideRailX = (FeltWidth + RailThickness) / 2f;
 
-            // A long rail spans from just past a corner pocket to just short of the mid pocket.
+            // The playable cushion spans from just past a corner pocket to just short of the mid pocket.
             float longStart = -HalfFeltWidth + PocketMouthHalfWidth;
             float longEnd = -PocketMouthHalfWidth;
             float longLength = longEnd - longStart;
@@ -87,17 +95,30 @@ namespace EightBall.Gameplay
 
             float sideLength = FeltHeight - PocketMouthHalfWidth * 2f;
 
+            // Left-hand long runs stretch from the table's outer edge to the mid-pocket centre;
+            // right-hand runs mirror them. Side runs stretch corner to corner.
+            float longVisualLength = HalfFeltWidth + RailThickness;
+            float longVisualCenterX = longVisualLength / 2f; // magnitude; left runs are negative
+
             var longSize = new Vector2(longLength, RailThickness);
             var sideSize = new Vector2(RailThickness, sideLength);
+            var longVisualSize = new Vector2(longVisualLength, RailThickness);
+            var sideVisualSize = new Vector2(RailThickness, FeltHeight + RailThickness * 2f);
 
             return new[]
             {
-                new RailSegment("Rail_Bottom_Left",  new Vector2( longOffsetX, -longRailY), longSize),
-                new RailSegment("Rail_Bottom_Right", new Vector2(-longOffsetX, -longRailY), longSize),
-                new RailSegment("Rail_Top_Left",     new Vector2( longOffsetX,  longRailY), longSize),
-                new RailSegment("Rail_Top_Right",    new Vector2(-longOffsetX,  longRailY), longSize),
-                new RailSegment("Rail_Left",         new Vector2(-sideRailX, 0f), sideSize),
-                new RailSegment("Rail_Right",        new Vector2( sideRailX, 0f), sideSize),
+                new RailSegment("Rail_Bottom_Left",  new Vector2( longOffsetX, -longRailY), longSize,
+                                                     new Vector2(-longVisualLength / 2f, -longRailY), longVisualSize),
+                new RailSegment("Rail_Bottom_Right", new Vector2(-longOffsetX, -longRailY), longSize,
+                                                     new Vector2( longVisualLength / 2f, -longRailY), longVisualSize),
+                new RailSegment("Rail_Top_Left",     new Vector2( longOffsetX,  longRailY), longSize,
+                                                     new Vector2(-longVisualLength / 2f,  longRailY), longVisualSize),
+                new RailSegment("Rail_Top_Right",    new Vector2(-longOffsetX,  longRailY), longSize,
+                                                     new Vector2( longVisualLength / 2f,  longRailY), longVisualSize),
+                new RailSegment("Rail_Left",         new Vector2(-sideRailX, 0f), sideSize,
+                                                     new Vector2(-sideRailX, 0f), sideVisualSize),
+                new RailSegment("Rail_Right",        new Vector2( sideRailX, 0f), sideSize,
+                                                     new Vector2( sideRailX, 0f), sideVisualSize),
             };
         }
 
