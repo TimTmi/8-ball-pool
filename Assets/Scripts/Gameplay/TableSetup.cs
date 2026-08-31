@@ -107,7 +107,9 @@ namespace EightBall.Gameplay
             sr.drawMode = SpriteDrawMode.Simple;
             sr.sortingOrder = -9;
 
-            SpawnCushionPad(segment.Name, segment.Center, segment.Size);
+            // The pad runs the full wooden span so it reaches into every pocket;
+            // the pocket sprites drawn above it cap its ends.
+            SpawnCushionPad(segment.Name, segment.VisualCenter, segment.VisualSize);
 
             // Scale GO to the full wooden run, pockets included (Rail sprite is ~1u wide at PxPerUnit=64)
             Vector2 spriteSize = _railSprite != null ? (Vector2)_railSprite.bounds.size : Vector2.one;
@@ -136,6 +138,7 @@ namespace EightBall.Gameplay
         /// Spawns the darker green cushion pad hugging the felt-facing edge of a rail run,
         /// like the rubber cushion under the wooden rail on a real table.
         /// Visual only — the rail's BoxCollider2D stays the full RailThickness.
+        /// Callers pass the visual run so the pad reaches the pocket holes.
         /// </summary>
         private void SpawnCushionPad(string railName, Vector2 railCenter, Vector2 railSize)
         {
