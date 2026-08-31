@@ -23,6 +23,7 @@ namespace EightBall.Gameplay
         [SerializeField] private Sprite[] _ballSprites; // Index 0=cue, 1–15 = balls 1–15
 
         [Header("Physics Materials")]
+        [SerializeField] private PhysicsMaterial2D _ballPhysicsMaterial;
         [SerializeField] private PhysicsMaterial2D _cushionPhysicsMaterial;
 
         // References to spawned objects (accessible by gameplay systems)
@@ -108,21 +109,22 @@ namespace EightBall.Gameplay
             sr.color = new Color(0.36f, 0.22f, 0.09f);
 
             // Scale GO to match required rail size (Rail sprite is ~1u wide at PxPerUnit=64)
-            if (_railSprite != null)
-            {
-                float sw = _railSprite.bounds.size.x;
-                float sh = _railSprite.bounds.size.y;
-                if (sw > 0f && sh > 0f)
-                    go.transform.localScale = new Vector3(size.x / sw, size.y / sh, 1f);
-            }
+            Vector2 spriteSize = _railSprite != null ? (Vector2)_railSprite.bounds.size : Vector2.one;
+            if (spriteSize.x > 0f && spriteSize.y > 0f)
+                go.transform.localScale = new Vector3(size.x / spriteSize.x, size.y / spriteSize.y, 1f);
 
             var col = go.GetComponent<BoxCollider2D>();
             if (col == null) col = go.AddComponent<BoxCollider2D>();
-            // Collider size 1×1 in local space; transform scale handles world size
-            col.size = Vector2.one;
+            // The transform scale maps the sprite's bounds onto `size`, so the box has to be
+            // authored in sprite-bounds units to come out exactly `size` in world space.
+            Vector3 railScale = go.transform.localScale;
+            col.size = new Vector2(ToLocal(size.x, railScale.x), ToLocal(size.y, railScale.y));
             col.isTrigger = false;
 
             if (_cushionPhysicsMaterial != null) col.sharedMaterial = _cushionPhysicsMaterial;
+
+            // Rails have to damp the rebound themselves — see Cushion for why the material can't.
+            if (go.GetComponent<Cushion>() == null) go.AddComponent<Cushion>();
         }
 
         // ── Pockets ───────────────────────────────────────────────────────────
@@ -163,26 +165,18 @@ namespace EightBall.Gameplay
             go.transform.localPosition = localPosition;
 
             // Visual
+            float pocketScale = ScaleToFit(_pocketSprite, TableLayout.PocketRadius * 2f);
+            go.transform.localScale = new Vector3(pocketScale, pocketScale, 1f);
+
             var sr = go.GetComponent<SpriteRenderer>();
             if (sr == null) sr = go.AddComponent<SpriteRenderer>();
             sr.sprite = _pocketSprite;
             sr.sortingOrder = -8;
 
-            float pocketDiameter = TableLayout.PocketRadius * 2f;
-            if (_pocketSprite != null)
-            {
-                float spriteSize = _pocketSprite.bounds.size.x;
-                if (spriteSize > 0f)
-                {
-                    float scale = pocketDiameter / spriteSize;
-                    go.transform.localScale = new Vector3(scale, scale, 1f);
-                }
-            }
-
             // Trigger collider
             var col = go.GetComponent<CircleCollider2D>();
             if (col == null) col = go.AddComponent<CircleCollider2D>();
-            col.radius = TableLayout.PocketRadius;
+            col.radius = ToLocal(TableLayout.PocketRadius, pocketScale);
             col.isTrigger = true;
 
             go.tag = "Pocket";
@@ -235,34 +229,31 @@ namespace EightBall.Gameplay
                 rb.angularDamping = 1f;
                 rb.interpolation = RigidbodyInterpolation2D.Interpolate;
                 rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
-                var col = go.AddComponent<CircleCollider2D>();
-                col.radius = TableLayout.BallRadius;
             }
 
             go.transform.localPosition = localPosition;
-            go.transform.localScale = Vector3.one;
 
-            // Assign sprite
             Sprite sprite = GetBallSprite(ballNumber);
+            float ballScale = ScaleToFit(sprite, TableLayout.BallDiameter);
+            go.transform.localScale = new Vector3(ballScale, ballScale, 1f);
+
             var sr = go.GetComponent<SpriteRenderer>();
             if (sr != null)
             {
                 sr.sprite = sprite;
                 sr.sortingOrder = 0;
-
-                // Scale sprite to match ball diameter
-                if (sprite != null)
-                {
-                    float spriteSize = sprite.bounds.size.x;
-                    if (spriteSize > 0f)
-                    {
-                        float scale = TableLayout.BallDiameter / spriteSize;
-                        go.transform.localScale = new Vector3(scale, scale, 1f);
-                    }
-                }
             }
 
-            // Tag
+            var col = go.GetComponent<CircleCollider2D>();
+            if (col == null) col = go.AddComponent<CircleCollider2D>();
+            col.radius = ToLocal(TableLayout.BallRadius, ballScale);
+            col.isTrigger = false;
+
+            if (_ballPhysicsMaterial != null) col.sharedMaterial = _ballPhysicsMaterial;
+
+            // Ball drives the shot launch and reports when this ball has stopped rolling.
+            if (go.GetComponent<Ball>() == null) go.AddComponent<Ball>();
+
             go.tag = ballNumber == 0 ? "CueBall" : "Ball";
 
             return go;
@@ -327,7 +318,23 @@ namespace EightBall.Gameplay
             return sprite;
         }
 
-        // Fix missing field reference in SetupCueStick
-        
+        /// <summary>Uniform scale that renders <paramref name="sprite"/> at <paramref name="targetSize"/> units wide.</summary>
+        private static float ScaleToFit(Sprite sprite, float targetSize)
+        {
+            if (sprite == null) return 1f;
+
+            float spriteSize = sprite.bounds.size.x;
+            return spriteSize > 0f ? targetSize / spriteSize : 1f;
+        }
+
+        /// <summary>
+        /// Converts a world-space collider dimension into the local space that the transform scale
+        /// re-expands. Colliders are authored in local units, so skipping this leaves the physics
+        /// shape a different size from the sprite it belongs to.
+        /// </summary>
+        private static float ToLocal(float worldSize, float scale)
+        {
+            return Mathf.Approximately(scale, 0f) ? worldSize : worldSize / scale;
+        }
     }
 }

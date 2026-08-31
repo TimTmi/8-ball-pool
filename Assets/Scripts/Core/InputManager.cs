@@ -10,6 +10,7 @@ namespace EightBall.Core
         [Header("Dependencies")]
         [SerializeField] private GameplayUIController _uiController;
         private TableSetup _tableSetup;
+        private CueController _cueController;
 
         [Header("Sensitivity")]
         [SerializeField] private float _aimSensitivity = 0.5f;
@@ -21,13 +22,17 @@ namespace EightBall.Core
         private Vector2 _lastPointerPosition;
         private bool _isDragging;
 
+        /// <summary>Aiming is only allowed once every ball has come to rest.</summary>
+        private bool CanAim => _cueController == null || _cueController.IsTableSettled;
+
         private void Start()
         {
             if (_uiController != null)
             {
                 _uiController.OnShootEvent += HandleShoot;
             }
-            _tableSetup = FindObjectOfType<TableSetup>();
+            _tableSetup = FindAnyObjectByType<TableSetup>();
+            _cueController = FindAnyObjectByType<CueController>();
         }
 
         private void OnDestroy()
@@ -46,6 +51,13 @@ namespace EightBall.Core
 
         private void HandleDragInput()
         {
+            // Ignore input while the shot is still playing out
+            if (!CanAim)
+            {
+                _isDragging = false;
+                return;
+            }
+
             var pointer = Pointer.current;
             if (pointer == null) return;
 
@@ -116,7 +128,13 @@ namespace EightBall.Core
         {
             if (_tableSetup == null || _tableSetup.CueStick == null || _tableSetup.CueBall == null) return;
 
-            Transform cueStick = _tableSetup.CueStick.transform;
+            GameObject cueStick = _tableSetup.CueStick;
+
+            // The cue is only on the table while the player is aiming
+            bool isAiming = CanAim;
+            if (cueStick.activeSelf != isAiming) cueStick.SetActive(isAiming);
+            if (!isAiming) return;
+
             Transform cueBall = _tableSetup.CueBall.transform;
 
             // Calculate the direction the player is aiming
@@ -129,16 +147,20 @@ namespace EightBall.Core
             float currentDistance = Mathf.Lerp(minDistance, maxDistance, CurrentPower);
 
             // Position cue stick behind the cue ball, pointing towards the aim direction
-            cueStick.position = cueBall.position - aimDir * currentDistance;
-            cueStick.rotation = Quaternion.Euler(0f, 0f, CurrentAimAngle);
+            cueStick.transform.position = cueBall.position - aimDir * currentDistance;
+            cueStick.transform.rotation = Quaternion.Euler(0f, 0f, CurrentAimAngle);
         }
 
         private void HandleShoot()
         {
-            Debug.Log($"Executing Shoot! Angle: {CurrentAimAngle}, Power: {CurrentPower}");
-            
-            // TODO: Apply force to cue ball in physics system
-            
+            if (_cueController == null)
+            {
+                Debug.LogError("[InputManager] No CueController in the scene — the shot cannot be played.", this);
+                return;
+            }
+
+            if (!_cueController.Shoot(CurrentAimAngle, CurrentPower)) return;
+
             // Reset for next turn
             CurrentPower = 0f;
             if (_uiController != null)

@@ -452,6 +452,7 @@ GameObject:
   - component: {fileID: 2063585315}
   - component: {fileID: 2063585314}
   - component: {fileID: 2063585316}
+  - component: {fileID: 2063585317}
   m_Layer: 0
   m_Name: Table
   m_TagString: Untagged
@@ -554,7 +555,22 @@ MonoBehaviour:
   _pocketSprite: {fileID: 21300000, guid: fa5679ae3e44c2943b6742fbbcf37ec9, type: 3}
   _cueStickSprite: {fileID: 21300000, guid: 364a5494a34f9bc60b547dc42aea59e8, type: 3}
   _ballSprites: []
+  _ballPhysicsMaterial: {fileID: 6200000, guid: 1a95438be7c0b83f898a65940c47249c, type: 2}
   _cushionPhysicsMaterial: {fileID: 6200000, guid: 815c1a3deebc2e8728ebc04873e323e5, type: 2}
+--- !u!114 &2063585317
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2063585313}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3c8f1a05d2e47b69c8d0e1f2a3b4c5d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EightBall.Gameplay.CueController
+  _minShotSpeed: 3
+  _maxShotSpeed: 26
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
