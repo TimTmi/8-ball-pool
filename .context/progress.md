@@ -16,6 +16,7 @@
 - HUD press isolation fixed (2026-08-31): `GameplayUIController.IsPointerPressOnUI` marks presses that belong to the HUD (shoot button, lock toggles, spin button/panel, or the tap that closes the spin panel); `InputManager` ignores them for aim/power. Replaces the narrower `IsSpinInteracting` flag, which is deleted.
 - Locks cleared on turn end (2026-09-01): `GameplayUIController.UnlockAimAndPower()` unticks both lock toggles, called from `InputManager.HandleShoot` after a successful shot, so each new turn starts with aim and power unlocked.
 - Drag cancel zone (2026-09-01): `InputManager` snapshots aim/power/has-aim when a drag starts; while the pointer stays within `_cancelRadius` (serialized, default 0.6u) of the cue ball, aim and power revert to the snapshot, and releasing inside the zone cancels the drag (no shoot button). Dragging back out of the zone resumes aiming.
+- Power bar (2026-09-01): while dragging with power unlocked, a world-space bar (`PowerBar` component, spawned as a Table child by `TableSetup.SetupPowerBar`) floats below the cue ball and fills 0→1 with `CurrentPower`. `InputManager.UpdatePowerBar` owns visibility (dragging + not power-locked + table settled) and hides it otherwise.
 
 ## Next Task
 - Complete Phase 3: Trajectory Prediction (Implement prediction line rendering and physics simulation ahead of the shot).

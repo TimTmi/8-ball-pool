@@ -29,6 +29,7 @@ namespace EightBall.Gameplay
         // References to spawned objects (accessible by gameplay systems)
         public GameObject CueBall    { get; private set; }
         public GameObject CueStick   { get; private set; }
+        public GameObject PowerBar   { get; private set; }
         public GameObject[] Balls    { get; private set; } // [0]=cue, [1–15]=object balls
 
         private void Start()
@@ -46,6 +47,7 @@ namespace EightBall.Gameplay
             SetupPockets();
             SetupBalls();
             SetupCueStick();
+            SetupPowerBar();
         }
 
         // ── Felt ──────────────────────────────────────────────────────────────
@@ -304,6 +306,20 @@ namespace EightBall.Gameplay
                 if (spriteW > 0f)
                     CueStick.transform.localScale = new Vector3(8f / spriteW, 1f, 1f);
             }
+        }
+
+        // ── Power Bar ─────────────────────────────────────────────────────────
+
+        private void SetupPowerBar()
+        {
+            var existing = transform.Find("PowerBar");
+            if (existing == null)
+            {
+                existing = new GameObject("PowerBar").transform;
+                existing.SetParent(transform, false);
+                existing.gameObject.AddComponent<PowerBar>();
+            }
+            PowerBar = existing.gameObject;
         }
 
         // ── Sprite Loading ────────────────────────────────────────────────────

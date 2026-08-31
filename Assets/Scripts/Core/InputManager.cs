@@ -27,6 +27,7 @@ namespace EightBall.Core
         private bool _isDragging;
         /// <summary>True once the player has aimed during the current turn; the cue only shows then.</summary>
         private bool _hasAim;
+        private PowerBar _powerBar;
 
         // Aim/power state captured when the current drag started, restored if the player
         // drags into the cancel zone around the cue ball
@@ -60,6 +61,7 @@ namespace EightBall.Core
         {
             HandleDragInput();
             UpdateCueVisuals();
+            UpdatePowerBar();
         }
 
         private void HandleDragInput()
@@ -207,6 +209,24 @@ namespace EightBall.Core
             // Position cue stick behind the cue ball, pointing towards the aim direction
             cueStick.transform.position = cueBall.position - aimDir * currentDistance;
             cueStick.transform.rotation = Quaternion.Euler(0f, 0f, CurrentAimAngle);
+        }
+
+        private void UpdatePowerBar()
+        {
+            // The bar is a live drag readout: only while dragging, and only when
+            // the player can still change the power it represents
+            bool showPowerBar = CanAim && _isDragging && _uiController != null && !_uiController.IsPowerLocked;
+            if (!showPowerBar)
+            {
+                if (_powerBar != null) _powerBar.Hide();
+                return;
+            }
+
+            if (_powerBar == null && _tableSetup != null && _tableSetup.PowerBar != null)
+                _powerBar = _tableSetup.PowerBar.GetComponent<PowerBar>();
+
+            if (_powerBar != null && _tableSetup.CueBall != null)
+                _powerBar.Show(_tableSetup.CueBall.transform.position, CurrentPower);
         }
 
         private void HandleShoot()
