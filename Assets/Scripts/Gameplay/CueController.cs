@@ -61,8 +61,23 @@ namespace EightBall.Gameplay
         {
             if (IsTableSettled || AnyBallMoving()) return;
 
+            ReturnScratchedCueBall();
+
             IsTableSettled = true;
             OnTableSettled?.Invoke();
+        }
+
+        /// <summary>
+        /// Interim scratch handling: a pocketed cue ball comes back on the head spot so play can
+        /// continue. The foul itself, and ball-in-hand placement, belong to the Phase 4 rules work.
+        /// </summary>
+        private void ReturnScratchedCueBall()
+        {
+            Ball cueBall = GetCueBall();
+            if (cueBall == null || !cueBall.IsPocketed) return;
+
+            cueBall.Restore();
+            cueBall.transform.localPosition = TableLayout.HeadSpot;
         }
 
         private bool AnyBallMoving()

@@ -1,10 +1,12 @@
+using System.Collections;
 using UnityEngine;
 
 namespace EightBall.Gameplay
 {
     /// <summary>
     /// Motion state for a single pool ball. Owns the rigidbody, launches the ball on a shot,
-    /// and reports whether it is still rolling so the shot lifecycle knows when the table settles.
+    /// reports whether it is still rolling so the shot lifecycle knows when the table settles,
+    /// and drops out of play when it is pocketed.
     /// Added by <see cref="TableSetup"/> to every spawned ball.
     /// </summary>
     [RequireComponent(typeof(Rigidbody2D))]
@@ -16,13 +18,25 @@ namespace EightBall.Gameplay
         /// </summary>
         public const float StopSpeedThreshold = 0.06f;
 
+        private const float SinkDuration = 0.18f;
+        private const float SinkEndScale = 0.25f;
+
         public bool IsMoving { get; private set; }
 
+        /// <summary>True once the ball has dropped into a pocket and left play.</summary>
+        public bool IsPocketed { get; private set; }
+
         private Rigidbody2D _body;
+        private Collider2D _collider;
+        private SpriteRenderer _renderer;
+        private Vector3 _fullScale = Vector3.one;
 
         private void Awake()
         {
             _body = GetComponent<Rigidbody2D>();
+            _collider = GetComponent<Collider2D>();
+            _renderer = GetComponent<SpriteRenderer>();
+            _fullScale = transform.localScale;
         }
 
         /// <summary>
@@ -32,7 +46,7 @@ namespace EightBall.Gameplay
         /// </summary>
         public void Launch(Vector2 direction, float speed)
         {
-            if (_body == null) return;
+            if (_body == null || IsPocketed) return;
 
             _body.WakeUp();
             _body.linearVelocity = direction.normalized * speed;
@@ -49,9 +63,51 @@ namespace EightBall.Gameplay
             IsMoving = false;
         }
 
+        /// <summary>
+        /// Takes the ball out of play: physics off first — so it stops shoving the balls still on
+        /// the table — then a short sink before it disappears down the hole.
+        /// </summary>
+        public void Drop()
+        {
+            if (IsPocketed) return;
+
+            IsPocketed = true;
+            StopImmediately();
+
+            if (_collider != null) _collider.enabled = false;
+            if (_body != null) _body.simulated = false;
+
+            _fullScale = transform.localScale;
+            StartCoroutine(SinkIntoPocket());
+        }
+
+        /// <summary>Puts a pocketed ball back on the table (a scratched cue ball, or a re-rack).</summary>
+        public void Restore()
+        {
+            StopAllCoroutines();
+
+            IsPocketed = false;
+            transform.localScale = _fullScale;
+            SetSpriteAlpha(1f);
+
+            gameObject.SetActive(true);
+            if (_collider != null) _collider.enabled = true;
+            if (_body != null) _body.simulated = true;
+
+            StopImmediately();
+        }
+
         private void FixedUpdate()
         {
-            if (_body == null) return;
+            if (_body == null || IsPocketed) return;
+
+            // Safety net: a ball that squeezed past a pocket mouth must not roll away forever,
+            // which would also leave the table permanently unsettled.
+            if (HasLeftTheTable())
+            {
+                Drop();
+                return;
+            }
 
             if (_body.linearVelocity.sqrMagnitude > StopSpeedThreshold * StopSpeedThreshold)
             {
@@ -60,6 +116,37 @@ namespace EightBall.Gameplay
             }
 
             if (IsMoving) StopImmediately();
+        }
+
+        private bool HasLeftTheTable()
+        {
+            Vector3 position = transform.localPosition;
+            return Mathf.Abs(position.x) > TableLayout.TableWidth * 0.5f + TableLayout.BallDiameter
+                || Mathf.Abs(position.y) > TableLayout.TableHeight * 0.5f + TableLayout.BallDiameter;
+        }
+
+        private IEnumerator SinkIntoPocket()
+        {
+            Vector3 sunkScale = _fullScale * SinkEndScale;
+
+            for (float elapsed = 0f; elapsed < SinkDuration; elapsed += Time.deltaTime)
+            {
+                float progress = Mathf.Clamp01(elapsed / SinkDuration);
+                transform.localScale = Vector3.Lerp(_fullScale, sunkScale, progress);
+                SetSpriteAlpha(1f - progress);
+                yield return null;
+            }
+
+            gameObject.SetActive(false);
+        }
+
+        private void SetSpriteAlpha(float alpha)
+        {
+            if (_renderer == null) return;
+
+            Color color = _renderer.color;
+            color.a = alpha;
+            _renderer.color = color;
         }
     }
 }

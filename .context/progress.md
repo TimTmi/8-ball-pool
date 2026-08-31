@@ -9,6 +9,7 @@
 - **Phase 3 (Partial): Visual & Physics Setup** - Procedural generation of 2D pool sprites (felt, cushions, pockets, 16 balls, cue stick) added via Editor script. `TableSetup` dynamically builds the physics and visual layout at runtime using authoritative constants from `TableLayout`.
 - **Phase 3 (Partial): Shot Physics & Cushion Bounce** - `CueController` (on the Table object) launches the cue ball from aim angle + power, and reports when every ball has come to rest. `Ball` owns each ball's motion state and snaps near-zero velocity to a full stop. `Cushion` drains the surplus rebound energy on rail hits. Aiming and the cue stick are suppressed while the shot plays out.
 - Collider sizing in `TableSetup` was corrected: ball, pocket, and rail colliders are now authored in local space, so they match their sprites instead of being scaled to the wrong size by the transform.
+- **Phase 4 (Partial): Pocketing** - The rails are now six runs with a mouth at every pocket, so balls can physically enter one. `Pocket` captures a ball when its centre reaches the hole; `Ball.Drop()` takes it out of play with a short sink. A scratched cue ball is returned to the head spot once the table settles.
 
 ## Next Task
 - Complete Phase 3: Trajectory Prediction (Implement prediction line rendering and physics simulation ahead of the shot).
@@ -16,4 +17,4 @@
 
 ## Blockers / Notes
 - Spin (`GameplayUIController.CurrentSpin`) is captured by the UI but not yet consumed by the shot; a top-down 2D cue ball needs an explicit curve/english model, planned with the trajectory work.
-- Pocket triggers exist but nothing listens to them yet — balls currently bounce along the whole rail. Pocketing belongs to Phase 4.
+- Pocketing is mechanical only: no foul detection, no turn switching, no win/loss, and a returned cue ball is not checked against balls already sitting on the head spot.

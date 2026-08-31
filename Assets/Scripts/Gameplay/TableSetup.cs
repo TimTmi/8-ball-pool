@@ -81,25 +81,21 @@ namespace EightBall.Gameplay
             if (_railSprite == null)
                 _railSprite = LoadSprite("Rail");
 
-            float fw = TableLayout.FeltWidth;
-            float fh = TableLayout.FeltHeight;
-            float rt = TableLayout.RailThickness;
-
-            // Bottom, Top, Left, Right
-            SpawnRail("Rail_Bottom", new Vector2(0f, -(fh + rt) / 2f), new Vector2(fw + rt * 2f, rt), 0f);
-            SpawnRail("Rail_Top",    new Vector2(0f,  (fh + rt) / 2f), new Vector2(fw + rt * 2f, rt), 0f);
-            SpawnRail("Rail_Left",   new Vector2(-(fw + rt) / 2f, 0f), new Vector2(rt, fh), 0f);
-            SpawnRail("Rail_Right",  new Vector2( (fw + rt) / 2f, 0f), new Vector2(rt, fh), 0f);
+            // Rails come in six runs with a gap at every pocket, so balls can enter the mouths.
+            foreach (TableLayout.RailSegment segment in TableLayout.GetRailSegments())
+            {
+                SpawnRail(segment.Name, segment.Center, segment.Size);
+            }
         }
 
-        private void SpawnRail(string railName, Vector2 position, Vector2 size, float angle)
+        private void SpawnRail(string railName, Vector2 position, Vector2 size)
         {
             // Reuse existing child if rebuilding
             var existing = transform.Find(railName);
             var go = existing != null ? existing.gameObject : new GameObject(railName);
             go.transform.SetParent(transform, false);
             go.transform.localPosition = position;
-            go.transform.localRotation = Quaternion.Euler(0f, 0f, angle);
+            go.transform.localRotation = Quaternion.identity;
 
             var sr = go.GetComponent<SpriteRenderer>();
             if (sr == null) sr = go.AddComponent<SpriteRenderer>();
@@ -179,6 +175,9 @@ namespace EightBall.Gameplay
             col.radius = ToLocal(TableLayout.PocketRadius, pocketScale);
             col.isTrigger = true;
 
+            // Pocket decides when a ball has rolled far enough in to drop.
+            if (go.GetComponent<Pocket>() == null) go.AddComponent<Pocket>();
+
             go.tag = "Pocket";
         }
 
@@ -252,7 +251,9 @@ namespace EightBall.Gameplay
             if (_ballPhysicsMaterial != null) col.sharedMaterial = _ballPhysicsMaterial;
 
             // Ball drives the shot launch and reports when this ball has stopped rolling.
-            if (go.GetComponent<Ball>() == null) go.AddComponent<Ball>();
+            var ball = go.GetComponent<Ball>();
+            if (ball == null) ball = go.AddComponent<Ball>();
+            ball.Restore(); // A rebuild puts any pocketed ball back in play
 
             go.tag = ballNumber == 0 ? "CueBall" : "Ball";
 

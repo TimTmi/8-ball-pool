@@ -29,3 +29,8 @@
 **Context**: A full-power break moves the cue ball ~0.5 units per 50 Hz step — wider than a ball (0.5u) and than the rails are thick (0.4u).
 **Decision**: Fixed Timestep 0.02 -> 0.01, velocity iterations 8 -> 12, position iterations 3 -> 6, and the restitution velocity threshold 1.0 -> 0.2.
 **Rationale**: Continuous collision detection prevents outright tunnelling, but contact resolution in a dense rack still needs the smaller step to stay believable; the lower restitution threshold keeps slow balls bouncing off cushions instead of dying on contact. 16 rigidbodies at 100 Hz is negligible on a mobile target.
+
+## [2026-08-31] Rails Are Cut Open at the Pockets, and Capture Is Centre-Based
+**Context**: Pocketing a ball needs the ball to be able to enter the pocket. The rails were four unbroken boxes running the full length of the table, so a ball could only ever skim across a pocket trigger while bouncing off the cushion in front of it.
+**Decision**: `TableLayout.GetRailSegments()` returns six rail runs with a `PocketMouthHalfWidth` (0.45u, ~1.8 ball widths) gap at every pocket, and `Pocket` captures a ball only when the distance between centres is within `PocketRadius` — not on trigger overlap.
+**Rationale**: Trigger overlap fires at centre distance 0.65u, which would swallow any ball merely rolling along a rail past a pocket. Keeping the trigger wide but testing the centre gives an early, cheap broad phase with a capture point that matches what the player sees. `Ball` carries an out-of-bounds failsafe so a ball that squeezes past a mouth is pocketed instead of rolling away forever, which would also leave the table permanently unsettled.

@@ -18,6 +18,7 @@
 - [ ] Tune physics materials (bounciness, friction) for realistic feel
 
 ## Phase 4: Game Loop & Rules
+- [x] Pocket detection: balls drop out of play, cue ball returns to the head spot on a scratch
 - [ ] Implement 8-ball rules logic (turns, faults, win/loss)
 - [ ] Add simple UI feedback for player turns and game over
 - [ ] Polish game flow (resetting table, transitioning to Main Menu)

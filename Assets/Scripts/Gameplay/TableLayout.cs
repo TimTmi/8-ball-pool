@@ -48,6 +48,56 @@ namespace EightBall.Gameplay
             new Vector2(0f,  HalfFeltHeight),             // Top-mid
         };
 
+        // Half-width of the opening left in the rails at each pocket (~1.8 ball widths across).
+        // Wide enough for a ball to roll in, narrow enough that the rails still play like cushions.
+        public const float PocketMouthHalfWidth = 0.45f;
+
+        /// <summary>One straight run of rail between two pocket mouths.</summary>
+        public readonly struct RailSegment
+        {
+            public readonly string Name;
+            public readonly Vector2 Center;
+            public readonly Vector2 Size;
+
+            public RailSegment(string name, Vector2 center, Vector2 size)
+            {
+                Name = name;
+                Center = center;
+                Size = size;
+            }
+        }
+
+        /// <summary>
+        /// The six rail runs, with a gap left at every pocket so a ball can actually enter one.
+        /// Long rails run corner-to-mid pocket; side rails run corner-to-corner.
+        /// </summary>
+        public static RailSegment[] GetRailSegments()
+        {
+            float longRailY = (FeltHeight + RailThickness) / 2f;
+            float sideRailX = (FeltWidth + RailThickness) / 2f;
+
+            // A long rail spans from just past a corner pocket to just short of the mid pocket.
+            float longStart = -HalfFeltWidth + PocketMouthHalfWidth;
+            float longEnd = -PocketMouthHalfWidth;
+            float longLength = longEnd - longStart;
+            float longOffsetX = (longStart + longEnd) / 2f;
+
+            float sideLength = FeltHeight - PocketMouthHalfWidth * 2f;
+
+            var longSize = new Vector2(longLength, RailThickness);
+            var sideSize = new Vector2(RailThickness, sideLength);
+
+            return new[]
+            {
+                new RailSegment("Rail_Bottom_Left",  new Vector2( longOffsetX, -longRailY), longSize),
+                new RailSegment("Rail_Bottom_Right", new Vector2(-longOffsetX, -longRailY), longSize),
+                new RailSegment("Rail_Top_Left",     new Vector2( longOffsetX,  longRailY), longSize),
+                new RailSegment("Rail_Top_Right",    new Vector2(-longOffsetX,  longRailY), longSize),
+                new RailSegment("Rail_Left",         new Vector2(-sideRailX, 0f), sideSize),
+                new RailSegment("Rail_Right",        new Vector2( sideRailX, 0f), sideSize),
+            };
+        }
+
         // Standard 8-ball rack order (5-row triangle, apex at FootSpot)
         // Row offsets from apex (using equilateral triangle packing)
         public static Vector2[] GetRackPositions()
