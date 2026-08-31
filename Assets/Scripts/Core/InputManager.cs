@@ -12,14 +12,14 @@ namespace EightBall.Core
         private TableSetup _tableSetup;
         private CueController _cueController;
 
-        [Header("Sensitivity")]
-        [SerializeField] private float _aimSensitivity = 0.5f;
-        [SerializeField] private float _powerSensitivity = 0.002f;
+        [Header("Power")]
+        [Tooltip("Pointer distance from the cue ball (world units) that corresponds to full power.")]
+        [SerializeField] private float _maxPowerDistance = TableLayout.HalfFeltWidth;
 
         public float CurrentAimAngle { get; private set; }
         public float CurrentPower { get; private set; } // Normalized 0 to 1
 
-        private Vector2 _lastPointerPosition;
+        private Camera _camera;
         private bool _isDragging;
 
         /// <summary>Aiming is only allowed once every ball has come to rest.</summary>
@@ -27,6 +27,7 @@ namespace EightBall.Core
 
         private void Start()
         {
+            _camera = Camera.main;
             if (_uiController != null)
             {
                 _uiController.OnShootEvent += HandleShoot;
@@ -70,7 +71,6 @@ namespace EightBall.Core
                 if (!spinActive)
                 {
                     _isDragging = true;
-                    _lastPointerPosition = pointer.position.ReadValue();
                 }
             }
             else if (pointer.press.isPressed && _isDragging)
@@ -78,16 +78,7 @@ namespace EightBall.Core
                 // Stop updating aim/power if the finger moved onto spin UI mid-drag
                 if (!spinActive)
                 {
-                    Vector2 currentPosition = pointer.position.ReadValue();
-                    Vector2 delta = currentPosition - _lastPointerPosition;
-                    _lastPointerPosition = currentPosition;
-
-                    UpdateAimAndPower(delta);
-                }
-                else
-                {
-                    // Keep position in sync so there's no jump when spin interaction ends
-                    _lastPointerPosition = pointer.position.ReadValue();
+                    UpdateAimAndPower(pointer.position.ReadValue());
                 }
             }
             else if (pointer.press.wasReleasedThisFrame)
@@ -105,22 +96,32 @@ namespace EightBall.Core
             }
         }
 
-        private void UpdateAimAndPower(Vector2 delta)
+        /// <summary>
+        /// Aims from the pointer through the cue ball (the finger drags on the cue's
+        /// side, like pulling the stick back) and sets power from the pointer's
+        /// distance to the cue ball, both in world space.
+        /// </summary>
+        private void UpdateAimAndPower(Vector2 pointerPosition)
         {
             if (_uiController == null) return;
+            if (_tableSetup == null || _tableSetup.CueBall == null) return;
+            if (_camera == null) return;
 
-            // X-axis drag for Aim
+            Vector3 screenPosition = new Vector3(pointerPosition.x, pointerPosition.y, -_camera.transform.position.z);
+            Vector2 pointerWorld = _camera.ScreenToWorldPoint(screenPosition);
+            Vector2 toBall = (Vector2)_tableSetup.CueBall.transform.position - pointerWorld;
+
+            // Too close to give a meaningful direction; keep the last aim angle
+            if (toBall.sqrMagnitude < 0.0001f) return;
+
             if (!_uiController.IsAimLocked)
             {
-                CurrentAimAngle += delta.x * _aimSensitivity;
-                CurrentAimAngle = Mathf.Repeat(CurrentAimAngle, 360f);
+                CurrentAimAngle = Mathf.Atan2(toBall.y, toBall.x) * Mathf.Rad2Deg;
             }
 
-            // Y-axis drag for Power (dragging down increases power, like pulling back)
             if (!_uiController.IsPowerLocked)
             {
-                CurrentPower -= delta.y * _powerSensitivity;
-                CurrentPower = Mathf.Clamp01(CurrentPower);
+                CurrentPower = Mathf.Clamp01(toBall.magnitude / _maxPowerDistance);
             }
         }
 
