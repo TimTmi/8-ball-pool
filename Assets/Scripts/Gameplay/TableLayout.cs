@@ -4,7 +4,9 @@ namespace EightBall.Gameplay
 {
     /// <summary>
     /// Authoritative constants for table geometry.
-    /// All values in Unity units. Ball radius = 0.25u.
+    /// All values in Unity units. Proportions mirror a real 9-ft table: 2:1 playing surface,
+    /// rails ≈ 9% of the playing width, ball ≈ 4.5% of the playing width (2.25" ball on 50"),
+    /// pocket mouth ≈ 1.9× the ball diameter (real range 1.8–2.0×).
     /// </summary>
     public static class TableLayout
     {
@@ -12,18 +14,18 @@ namespace EightBall.Gameplay
         public const float FeltWidth  = 9.0f;
         public const float FeltHeight = 4.5f;
 
-        // Rail thickness
+        // Rail thickness (~9% of the playing width)
         public const float RailThickness = 0.4f;
 
         // Thickness of the green cushion pad on the felt-facing side of each rail
         public const float CushionPadThickness = 0.15f;
 
-        // Ball
-        public const float BallRadius   = 0.25f;
+        // Ball: 0.2u diameter ≈ 4.5% of the felt's width, like a 2.25" ball on a 9-ft table
+        public const float BallRadius   = 0.1f;
         public const float BallDiameter = BallRadius * 2f;
 
-        // Pocket radius (trigger)
-        public const float PocketRadius = 0.4f;
+        // Pocket radius (trigger): visual hole is 1.6× the ball diameter, as before
+        public const float PocketRadius = BallDiameter * 0.8f;
 
         // Outer table (felt + rails)
         public const float TableWidth  = FeltWidth  + RailThickness * 2f;
@@ -51,9 +53,10 @@ namespace EightBall.Gameplay
             new Vector2(0f,  HalfFeltHeight),             // Top-mid
         };
 
-        // Half-width of the opening left in the rails at each pocket (~1.8 ball widths across).
+        // Half-width of the opening left in the rails at each pocket: the opening spans
+        // ~1.9× the ball diameter (mid-range of the real 1.8–2.0× pocket-mouth rule).
         // Wide enough for a ball to roll in, narrow enough that the rails still play like cushions.
-        public const float PocketMouthHalfWidth = 0.45f;
+        public const float PocketMouthHalfWidth = BallDiameter * 0.95f;
 
         /// <summary>
         /// One straight run of rail. <see cref="Center"/>/<see cref="Size"/> is the cushion-only

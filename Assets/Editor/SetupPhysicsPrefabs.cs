@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEditor;
+using EightBall.Gameplay;
 
 namespace EightBall.EditorScripts
 {
@@ -31,7 +32,7 @@ namespace EightBall.EditorScripts
             
             CircleCollider2D circleCollider = ballObj.AddComponent<CircleCollider2D>();
             circleCollider.sharedMaterial = ballMat;
-            circleCollider.radius = 0.25f; // Diameter 0.5
+            circleCollider.radius = TableLayout.BallRadius; // Diameter TableLayout.BallDiameter
 
             Rigidbody2D rb = ballObj.AddComponent<Rigidbody2D>();
             rb.bodyType = RigidbodyType2D.Dynamic;
@@ -58,7 +59,7 @@ namespace EightBall.EditorScripts
             GameObject pocketObj = new GameObject("Pocket");
             CircleCollider2D pocketCollider = pocketObj.AddComponent<CircleCollider2D>();
             pocketCollider.isTrigger = true;
-            pocketCollider.radius = 0.4f;
+            pocketCollider.radius = TableLayout.PocketRadius;
             
             PrefabUtility.SaveAsPrefabAsset(pocketObj, "Assets/Prefabs/Pocket.prefab");
             Object.DestroyImmediate(pocketObj);
