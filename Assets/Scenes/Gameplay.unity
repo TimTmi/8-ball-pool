@@ -573,6 +573,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EightBall.Gameplay.CueController
   _minShotSpeed: 3
   _maxShotSpeed: 26
+--- !u!114 &2063585318
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2063585313}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::EightBall.Gameplay.TurnManager
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

@@ -62,9 +62,19 @@ namespace EightBall.Gameplay
             if (IsTableSettled || AnyBallMoving()) return;
 
             ReturnScratchedCueBall();
+            StabilizeBalls();
 
             IsTableSettled = true;
             OnTableSettled?.Invoke();
+        }
+
+        /// <summary>Ends the shot by zeroing every ball's residual sub-threshold drift and spin.</summary>
+        private void StabilizeBalls()
+        {
+            foreach (Ball ball in _balls)
+            {
+                if (ball != null) ball.Stabilize();
+            }
         }
 
         /// <summary>

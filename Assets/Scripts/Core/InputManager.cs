@@ -11,6 +11,7 @@ namespace EightBall.Core
         [SerializeField] private GameplayUIController _uiController;
         private TableSetup _tableSetup;
         private CueController _cueController;
+        private TurnManager _turnManager;
 
         [Header("Power")]
         [Tooltip("Max cue pull-back distance (world units). Pointer distance from the cue ball maps 1:1 to the cue pull and is clamped here; full power is reached at this distance.")]
@@ -47,6 +48,11 @@ namespace EightBall.Core
             }
             _tableSetup = FindAnyObjectByType<TableSetup>();
             _cueController = FindAnyObjectByType<CueController>();
+            _turnManager = FindAnyObjectByType<TurnManager>();
+            if (_turnManager != null)
+            {
+                _turnManager.OnTurnStarted += HandleTurnStarted;
+            }
         }
 
         private void OnDestroy()
@@ -54,6 +60,11 @@ namespace EightBall.Core
             if (_uiController != null)
             {
                 _uiController.OnShootEvent -= HandleShoot;
+            }
+
+            if (_turnManager != null)
+            {
+                _turnManager.OnTurnStarted -= HandleTurnStarted;
             }
         }
 
@@ -246,6 +257,14 @@ namespace EightBall.Core
             {
                 _uiController.SetShootButtonActive(false);
                 _uiController.UnlockAimAndPower();
+            }
+        }
+
+        private void HandleTurnStarted(int playerIndex)
+        {
+            if (_uiController != null && _turnManager != null)
+            {
+                _uiController.SetTurnLabelText($"{_turnManager.CurrentPlayerName}'s Turn");
             }
         }
     }

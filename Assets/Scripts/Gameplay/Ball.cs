@@ -18,6 +18,9 @@ namespace EightBall.Gameplay
         /// </summary>
         public const float StopSpeedThreshold = 0.06f;
 
+        /// <summary>Angular speed (radians/sec) below which a ball's spin counts as stopped.</summary>
+        public const float StopAngularSpeedThreshold = 0.5f;
+
         private const float SinkDuration = 0.18f;
         private const float SinkEndScale = 0.25f;
 
@@ -61,6 +64,16 @@ namespace EightBall.Gameplay
             _body.linearVelocity = Vector2.zero;
             _body.angularVelocity = 0f;
             IsMoving = false;
+        }
+
+        /// <summary>
+        /// Kills any remaining sub-threshold movement and rotation. Called once the table has
+        /// settled, so the next turn starts with every ball perfectly at rest instead of
+        /// drifting or spinning imperceptibly.
+        /// </summary>
+        public void Stabilize()
+        {
+            if (!IsMoving) StopImmediately();
         }
 
         /// <summary>
@@ -109,7 +122,8 @@ namespace EightBall.Gameplay
                 return;
             }
 
-            if (_body.linearVelocity.sqrMagnitude > StopSpeedThreshold * StopSpeedThreshold)
+            if (_body.linearVelocity.sqrMagnitude > StopSpeedThreshold * StopSpeedThreshold
+                || Mathf.Abs(_body.angularVelocity) > StopAngularSpeedThreshold)
             {
                 IsMoving = true;
                 return;

@@ -27,6 +27,7 @@ namespace EightBall.UI
         private Button _shootButton;
         private Toggle _lockAimToggle;
         private Toggle _lockPowerToggle;
+        private Label _turnLabel;
 
         // Compact cue ball button
         private VisualElement _spinButton;
@@ -63,6 +64,7 @@ namespace EightBall.UI
             BindLockToggles();
             BindSpinButton();
             BindSpinPanel();
+            _turnLabel = _root.Q<Label>("player-turn-label");
         }
 
         private void OnDisable()
@@ -109,6 +111,12 @@ namespace EightBall.UI
 
             if (_lockAimToggle != null) _lockAimToggle.SetValueWithoutNotify(false);
             if (_lockPowerToggle != null) _lockPowerToggle.SetValueWithoutNotify(false);
+        }
+
+        /// <summary>Sets the top-bar label naming the player whose turn it is.</summary>
+        public void SetTurnLabelText(string text)
+        {
+            if (_turnLabel != null) _turnLabel.text = text;
         }
 
         private void BindLockToggles()
