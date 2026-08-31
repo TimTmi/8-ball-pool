@@ -18,6 +18,7 @@ namespace EightBall.Gameplay
         [Header("Sprites — drag-assign from Assets/Textures or leave blank for runtime load")]
         [SerializeField] private Sprite _feltSprite;
         [SerializeField] private Sprite _railSprite;
+        [SerializeField] private Sprite _railCornerSprite;
         [SerializeField] private Sprite _railCushionSprite;
         [SerializeField] private Sprite _pocketSprite;
         [SerializeField] private Sprite _cueStickSprite;
@@ -89,6 +90,51 @@ namespace EightBall.Gameplay
             foreach (TableLayout.RailSegment segment in TableLayout.GetRailSegments())
             {
                 SpawnRail(segment);
+            }
+
+            SetupRailCorners();
+        }
+
+        /// <summary>
+        /// Caps the four square corners where the rail runs meet with a rounded wood cap.
+        /// Visual only — the pocket colliders stay open, and balls never reach the outer corners.
+        /// </summary>
+        private void SetupRailCorners()
+        {
+            if (_railCornerSprite == null)
+                _railCornerSprite = LoadSprite("RailCorner");
+            if (_railCornerSprite == null) return;
+
+            float x = TableLayout.HalfFeltWidth + TableLayout.RailThickness / 2f;
+            float y = TableLayout.HalfFeltHeight + TableLayout.RailThickness / 2f;
+
+            // The sprite is rounded at its top-right; rotate it to face each outer corner.
+            SpawnRailCorner("Rail_Corner_TL", new Vector2(-x,  y), 90f);
+            SpawnRailCorner("Rail_Corner_TR", new Vector2( x,  y), 0f);
+            SpawnRailCorner("Rail_Corner_BL", new Vector2(-x, -y), 180f);
+            SpawnRailCorner("Rail_Corner_BR", new Vector2( x, -y), 270f);
+        }
+
+        private void SpawnRailCorner(string name, Vector2 localPosition, float zRotation)
+        {
+            var existing = transform.Find(name);
+            var go = existing != null ? existing.gameObject : new GameObject(name);
+            go.transform.SetParent(transform, false);
+            go.transform.localPosition = localPosition;
+            go.transform.localRotation = Quaternion.Euler(0f, 0f, zRotation);
+
+            var sr = go.GetComponent<SpriteRenderer>();
+            if (sr == null) sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = _railCornerSprite;
+            sr.drawMode = SpriteDrawMode.Simple;
+            sr.sortingOrder = -7; // above the rails and pads, below the pocket holes
+
+            // The cap is RailThickness square; the sprite is 26px wide at PxPerUnit=64
+            float spriteSize = _railCornerSprite.bounds.size.x;
+            if (spriteSize > 0f)
+            {
+                float scale = TableLayout.RailThickness / spriteSize;
+                go.transform.localScale = new Vector3(scale, scale, 1f);
             }
         }
 
@@ -222,7 +268,7 @@ namespace EightBall.Gameplay
             var sr = go.GetComponent<SpriteRenderer>();
             if (sr == null) sr = go.AddComponent<SpriteRenderer>();
             sr.sprite = _pocketSprite;
-            sr.sortingOrder = -8;
+            sr.sortingOrder = -6; // above the corner caps, so the holes stay cut into the frame
 
             // Trigger collider
             var col = go.GetComponent<CircleCollider2D>();

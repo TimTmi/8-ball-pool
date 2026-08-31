@@ -20,6 +20,7 @@ namespace EightBall.Editor
 
             GenerateTableFelt();
             GenerateRail();
+            GenerateRailCorner();
             GenerateRailCushion();
             GeneratePocket();
             GenerateCueBall();
@@ -54,6 +55,38 @@ namespace EightBall.Editor
                 tex.SetPixel(x, h - 1, new Color32(190, 140, 84, 255));
             tex.Apply();
             SavePng(tex, "Rail");
+        }
+
+        // ── Rail corner cap: rounds one outer table corner ─────────────────────
+        // Sits on top of the square corner where two rail runs meet. The sprite is
+        // rounded at its top-right; TableSetup rotates it per corner.
+        private static void GenerateRailCorner()
+        {
+            // RailThickness 0.4u → 26 x 26 px at PxPerUnit=64
+            int size = 26;
+            int radius = 16; // 0.25u rounding of the outer corner
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            var railColor = new Color32(150, 102, 56, 255);
+            var highlight = new Color32(190, 140, 84, 255);
+            Fill(tex, railColor);
+
+            // Cut the top-right corner: outside the corner region keep the wood,
+            // inside it keep only pixels within `radius` of the arc centre.
+            int cx = size - radius, cy = size - radius;
+            for (int y = cy; y < size; y++)
+            {
+                for (int x = cx; x < size; x++)
+                {
+                    int dx = x - cx, dy = y - cy;
+                    int distSq = dx * dx + dy * dy;
+                    if (distSq > radius * radius)
+                        tex.SetPixel(x, y, Color.clear);
+                    else if (distSq > (radius - 2) * (radius - 2))
+                        tex.SetPixel(x, y, highlight); // lit outer edge, like the rail's top line
+                }
+            }
+            tex.Apply();
+            SavePng(tex, "RailCorner");
         }
 
         // ── Rail cushion pad: dark green strip on the rail's felt-facing side ──

@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 7c9f7c790591181adb9565873f3cf5df
+guid: 3e6686a01606291d4b136b7796864cb0
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 6832779043209864317
-    second: RailCushion_0
+      213: -318447964918442495
+    second: RailCorner_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -113,13 +113,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: RailCushion_0
+      name: RailCorner_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 64
-        height: 10
+        width: 26
+        height: 26
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: d74e1439658e2de50800000000000000
-      internalID: 6832779043209864317
+      spriteID: 106179b5345a49bf0800000000000000
+      internalID: -318447964918442495
       vertices: []
       indices: 
       edges: []
@@ -148,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      RailCushion_0: 6832779043209864317
+      RailCorner_0: -318447964918442495
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
