@@ -101,6 +101,16 @@ namespace EightBall.UI
             SetShootButtonActive(false);
         }
 
+        /// <summary>Unlock aim and power so the next turn starts with both free.</summary>
+        public void UnlockAimAndPower()
+        {
+            IsAimLocked = false;
+            IsPowerLocked = false;
+
+            if (_lockAimToggle != null) _lockAimToggle.SetValueWithoutNotify(false);
+            if (_lockPowerToggle != null) _lockPowerToggle.SetValueWithoutNotify(false);
+        }
+
         private void BindLockToggles()
         {
             _lockAimToggle = _root.Q<Toggle>("lock-aim-toggle");

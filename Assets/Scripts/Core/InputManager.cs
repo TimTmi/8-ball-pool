@@ -16,6 +16,10 @@ namespace EightBall.Core
         [Tooltip("Max cue pull-back distance (world units). Pointer distance from the cue ball maps 1:1 to the cue pull and is clamped here; full power is reached at this distance.")]
         [SerializeField] private float _maxPullDistance = 2.5f;
 
+        [Header("Cancel")]
+        [Tooltip("Radius around the cue ball (world units) that cancels the current drag: while the pointer is inside, aim and power revert to their pre-drag values, and releasing here cancels the shot setup.")]
+        [SerializeField] private float _cancelRadius = 0.6f;
+
         public float CurrentAimAngle { get; private set; }
         public float CurrentPower { get; private set; } // Normalized 0 to 1
 
@@ -23,6 +27,12 @@ namespace EightBall.Core
         private bool _isDragging;
         /// <summary>True once the player has aimed during the current turn; the cue only shows then.</summary>
         private bool _hasAim;
+
+        // Aim/power state captured when the current drag started, restored if the player
+        // drags into the cancel zone around the cue ball
+        private float _dragStartAimAngle;
+        private float _dragStartPower;
+        private bool _dragStartHasAim;
 
         /// <summary>Aiming is only allowed once every ball has come to rest.</summary>
         private bool CanAim => _cueController == null || _cueController.IsTableSettled;
@@ -74,6 +84,9 @@ namespace EightBall.Core
                 if (!pressOnUI)
                 {
                     _isDragging = true;
+                    _dragStartAimAngle = CurrentAimAngle;
+                    _dragStartPower = CurrentPower;
+                    _dragStartHasAim = _hasAim;
                 }
             }
             else if (pointer.press.isPressed && _isDragging)
@@ -95,13 +108,39 @@ namespace EightBall.Core
                 {
                     _isDragging = false;
 
-                    // Show shoot button if we actually aimed/powered up
-                    if (_uiController != null)
+                    if (IsPointerInCancelZone(pointer.position.ReadValue()))
                     {
-                        _uiController.SetShootButtonActive(true);
+                        // Released in the cancel zone: discard the whole drag
+                        RestorePreDragState();
+                    }
+                    else
+                    {
+                        // Show shoot button if we actually aimed/powered up
+                        if (_uiController != null)
+                        {
+                            _uiController.SetShootButtonActive(true);
+                        }
                     }
                 }
             }
+        }
+
+        private bool IsPointerInCancelZone(Vector2 pointerPosition)
+        {
+            if (_tableSetup == null || _tableSetup.CueBall == null || _camera == null) return false;
+
+            Vector3 screenPosition = new Vector3(pointerPosition.x, pointerPosition.y, -_camera.transform.position.z);
+            Vector2 pointerWorld = _camera.ScreenToWorldPoint(screenPosition);
+            return (pointerWorld - (Vector2)_tableSetup.CueBall.transform.position).sqrMagnitude
+                <= _cancelRadius * _cancelRadius;
+        }
+
+        /// <summary>Reverts aim and power to the state captured when the current drag started.</summary>
+        private void RestorePreDragState()
+        {
+            CurrentAimAngle = _dragStartAimAngle;
+            CurrentPower = _dragStartPower;
+            _hasAim = _dragStartHasAim;
         }
 
         /// <summary>
@@ -119,8 +158,13 @@ namespace EightBall.Core
             Vector2 pointerWorld = _camera.ScreenToWorldPoint(screenPosition);
             Vector2 toBall = (Vector2)_tableSetup.CueBall.transform.position - pointerWorld;
 
-            // Too close to give a meaningful direction; keep the last aim angle
-            if (toBall.sqrMagnitude < 0.0001f) return;
+            // Pointer is in the cancel zone around the cue ball: revert to the pre-drag
+            // aim/power until it leaves the zone (which resumes aiming from scratch)
+            if (toBall.magnitude <= _cancelRadius)
+            {
+                RestorePreDragState();
+                return;
+            }
 
             _hasAim = true;
 
@@ -181,6 +225,7 @@ namespace EightBall.Core
             if (_uiController != null)
             {
                 _uiController.SetShootButtonActive(false);
+                _uiController.UnlockAimAndPower();
             }
         }
     }

@@ -14,6 +14,8 @@
 - Pull distance made 1:1 (2026-08-31): pointer-to-cue-ball distance now maps directly to the cue stick pull-back, capped at `_maxPullDistance` (default 2.5u) in `InputManager`, which also defines full power. The cue visual reads the same field, replacing its own hardcoded 2.5u pull.
 - Cue sprite orientation fixed (2026-08-31): cue art now has the tip (chalk) on the right (+X), matching the runtime assumption that the sprite's +X axis points at the cue ball (`InputManager.UpdateCueVisuals`). Previously the butt faced the ball.
 - HUD press isolation fixed (2026-08-31): `GameplayUIController.IsPointerPressOnUI` marks presses that belong to the HUD (shoot button, lock toggles, spin button/panel, or the tap that closes the spin panel); `InputManager` ignores them for aim/power. Replaces the narrower `IsSpinInteracting` flag, which is deleted.
+- Locks cleared on turn end (2026-09-01): `GameplayUIController.UnlockAimAndPower()` unticks both lock toggles, called from `InputManager.HandleShoot` after a successful shot, so each new turn starts with aim and power unlocked.
+- Drag cancel zone (2026-09-01): `InputManager` snapshots aim/power/has-aim when a drag starts; while the pointer stays within `_cancelRadius` (serialized, default 0.6u) of the cue ball, aim and power revert to the snapshot, and releasing inside the zone cancels the drag (no shoot button). Dragging back out of the zone resumes aiming.
 
 ## Next Task
 - Complete Phase 3: Trajectory Prediction (Implement prediction line rendering and physics simulation ahead of the shot).
