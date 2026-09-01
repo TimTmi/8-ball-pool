@@ -93,6 +93,34 @@
     color: rgb(95, 170, 255);
 }
 
+/* ── Denied-shoot hint (absolute overlay) ───────────────────── */
+
+/* Shown when the player taps the shoot button while it is still red.
+   GameplayUIController flashes it above the bottom bar and shakes the button. */
+.shoot-hint {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 132px;
+    -unity-text-align: middle-center;
+    font-size: 24px;
+    -unity-font-style: bold;
+    color: white;
+    -unity-text-outline-width: 3px;
+    -unity-text-outline-color: rgba(0, 0, 0, 0.55);
+    transition-property: opacity;
+    transition-duration: 0.3s;
+}
+
+.shoot-hint--hidden {
+    display: none;
+}
+
+/* Set when the hint should start dissolving out */
+.shoot-hint--fading {
+    opacity: 0;
+}
+
 /* ── Compact spin button (always-visible cue ball) ──────────── */
 
 .spin-button {

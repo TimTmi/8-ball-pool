@@ -33,6 +33,7 @@ namespace EightBall.UI
         private Label _turnLabel;
         private Label _turnBanner;
         private VisualElement _bottomBar;
+        private Label _shootHint;
 
         // Compact cue ball button
         private VisualElement _spinButton;
@@ -51,6 +52,7 @@ namespace EightBall.UI
         private bool _panelOpen;
         private bool _isDraggingHitPoint;
         private Coroutine _turnBannerRoutine;
+        private Coroutine _shootDenyRoutine;
 
         // ── Half-size constants (pixels) for indicator placement ──────
         private const float ButtonDotHalf = 7f;   // half of 14px dot
@@ -61,6 +63,13 @@ namespace EightBall.UI
         private const string PulseClass = "turn-indicator--pulse";
         // How long the banner stays fully visible before dissolving (seconds)
         private const float TurnBannerHoldDuration = 1.1f;
+        private const string ShootHintHiddenClass = "shoot-hint--hidden";
+        private const string ShootHintFadingClass = "shoot-hint--fading";
+        // How long the denied-shoot hint stays fully visible before dissolving (seconds)
+        private const float ShootHintHoldDuration = 1.2f;
+        private const float ShootShakeAmplitude = 8f;
+        private const int ShootShakeHalfCycles = 4;
+        private const float ShootShakeHalfCycleDuration = 0.05f;
 
         // ── Lifecycle ─────────────────────────────────────────────────
 
@@ -80,6 +89,7 @@ namespace EightBall.UI
             _turnLabel = _root.Q<Label>("player-turn-label");
             _turnBanner = _root.Q<Label>("turn-banner");
             _bottomBar = _root.Q<VisualElement>("bottom-bar");
+            _shootHint = _root.Q<Label>("shoot-hint");
         }
 
         private void OnDisable()
@@ -110,6 +120,8 @@ namespace EightBall.UI
                 _root.UnregisterCallback<PointerUpEvent>(OnRootPointerReleased, TrickleDown.TrickleDown);
                 _root.UnregisterCallback<PointerCancelEvent>(OnRootPointerReleased, TrickleDown.TrickleDown);
             }
+
+            HideShootDeniedFeedback();
         }
 
         // ── Binding helpers ───────────────────────────────────────────
@@ -153,6 +165,7 @@ namespace EightBall.UI
             if (!visible)
             {
                 SetPanelOpen(false);
+                HideShootDeniedFeedback();
             }
         }
 
@@ -437,10 +450,76 @@ namespace EightBall.UI
 
         private void OnShootClicked()
         {
-            if (!_isShootUnlocked) return;
+            if (!_isShootUnlocked)
+            {
+                ShowShootDeniedFeedback();
+                return;
+            }
 
             OnShootEvent?.Invoke();
             SetShootButtonUnlocked(false);
+        }
+
+        // ── Denied-shoot feedback ─────────────────────────────────────
+
+        /// <summary>
+        /// Feedback for tapping the shoot button while it is locked (power not set):
+        /// shakes the red button, then flashes the shoot-hint label above the bottom bar.
+        /// </summary>
+        private void ShowShootDeniedFeedback()
+        {
+            if (_shootDenyRoutine != null) StopCoroutine(_shootDenyRoutine);
+            _shootDenyRoutine = StartCoroutine(ShootDeniedRoutine());
+        }
+
+        /// <summary>Reverts a running denied-feedback display to its hidden rest state.</summary>
+        private void HideShootDeniedFeedback()
+        {
+            if (_shootDenyRoutine != null)
+            {
+                StopCoroutine(_shootDenyRoutine);
+                _shootDenyRoutine = null;
+            }
+
+            if (_shootButton != null)
+                _shootButton.style.translate = new Translate(0f, 0f, 0f);
+
+            if (_shootHint != null)
+            {
+                _shootHint.AddToClassList(ShootHintHiddenClass);
+                _shootHint.RemoveFromClassList(ShootHintFadingClass);
+            }
+        }
+
+        private IEnumerator ShootDeniedRoutine()
+        {
+            // Horizontal shake so the tap reads as "denied", not as a dead button
+            if (_shootButton != null)
+            {
+                for (int i = 0; i < ShootShakeHalfCycles; i++)
+                {
+                    float direction = (i % 2 == 0) ? 1f : -1f;
+                    _shootButton.style.translate = new Translate(ShootShakeAmplitude * direction, 0f, 0f);
+                    yield return new WaitForSeconds(ShootShakeHalfCycleDuration);
+                }
+                _shootButton.style.translate = new Translate(0f, 0f, 0f);
+            }
+
+            if (_shootHint != null)
+            {
+                _shootHint.RemoveFromClassList(ShootHintFadingClass);
+                _shootHint.RemoveFromClassList(ShootHintHiddenClass);
+            }
+
+            yield return new WaitForSeconds(ShootHintHoldDuration);
+
+            if (_shootHint != null)
+            {
+                _shootHint.AddToClassList(ShootHintFadingClass);
+                yield return new WaitForSeconds(0.3f);
+                _shootHint.AddToClassList(ShootHintHiddenClass);
+                _shootHint.RemoveFromClassList(ShootHintFadingClass);
+            }
         }
     }
 }

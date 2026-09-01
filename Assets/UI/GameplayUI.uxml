@@ -50,4 +50,7 @@
 
     <!-- Turn-change announcement — absolute overlay, hidden by default -->
     <ui:Label name="turn-banner" text="Player 1's Turn" class="turn-banner turn-banner--hidden" />
+
+    <!-- Denied-shoot hint — absolute overlay above the bottom bar, hidden by default -->
+    <ui:Label name="shoot-hint" text="Drag back from the cue ball to set power" class="shoot-hint shoot-hint--hidden" />
 </ui:UXML>
