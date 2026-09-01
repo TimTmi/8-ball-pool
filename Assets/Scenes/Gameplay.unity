@@ -425,6 +425,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EightBall.Core.InputManager
   _uiController: {fileID: 1302044208}
   _maxPullDistance: 2.5
+  _strikeDuration: 0.07
   _cancelRadius: 0.6
 --- !u!4 &1973044489
 Transform:
@@ -453,6 +454,7 @@ GameObject:
   - component: {fileID: 2063585314}
   - component: {fileID: 2063585316}
   - component: {fileID: 2063585317}
+  - component: {fileID: 2063585318}
   m_Layer: 0
   m_Name: Table
   m_TagString: Untagged
@@ -557,7 +559,7 @@ MonoBehaviour:
   _pocketSprite: {fileID: 21300000, guid: fa5679ae3e44c2943b6742fbbcf37ec9, type: 3}
   _cueStickSprite: {fileID: 21300000, guid: 364a5494a34f9bc60b547dc42aea59e8, type: 3}
   _ballSprites: []
-  _ballPhysicsMaterial: {fileID: 0}
+  _ballPhysicsMaterial: {fileID: 6200000, guid: 1a95438be7c0b83f898a65940c47249c, type: 2}
   _cushionPhysicsMaterial: {fileID: 6200000, guid: 815c1a3deebc2e8728ebc04873e323e5, type: 2}
 --- !u!114 &2063585317
 MonoBehaviour:
@@ -583,7 +585,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EightBall.Gameplay.TurnManager
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
