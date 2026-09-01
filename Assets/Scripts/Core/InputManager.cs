@@ -25,6 +25,8 @@ namespace EightBall.Core
         [Header("Cancel")]
         [Tooltip("Radius around the cue ball (world units) that cancels the current drag: while the pointer is inside, aim and power revert to their pre-drag values, and releasing here cancels the shot setup.")]
         [SerializeField] private float _cancelRadius = 0.6f;
+        [Tooltip("Margin (pixels) along the app's screen edges that cancels the current drag, same behaviour as the cue-ball cancel zone.")]
+        [SerializeField] private float _edgeCancelMargin = 48f;
 
         public float CurrentAimAngle { get; private set; }
         public float CurrentPower { get; private set; } // Normalized 0 to 1
@@ -153,6 +155,17 @@ namespace EightBall.Core
 
         private bool IsPointerInCancelZone(Vector2 pointerPosition)
         {
+            return IsPointerNearScreenEdge(pointerPosition) || IsPointerNearCueBall(pointerPosition);
+        }
+
+        private bool IsPointerNearScreenEdge(Vector2 pointerPosition)
+        {
+            return pointerPosition.x < _edgeCancelMargin || pointerPosition.x > Screen.width - _edgeCancelMargin
+                || pointerPosition.y < _edgeCancelMargin || pointerPosition.y > Screen.height - _edgeCancelMargin;
+        }
+
+        private bool IsPointerNearCueBall(Vector2 pointerPosition)
+        {
             if (_tableSetup == null || _tableSetup.CueBall == null || _camera == null) return false;
 
             Vector3 screenPosition = new Vector3(pointerPosition.x, pointerPosition.y, -_camera.transform.position.z);
@@ -183,9 +196,10 @@ namespace EightBall.Core
             Vector2 pointerWorld = _camera.ScreenToWorldPoint(screenPosition);
             Vector2 toBall = (Vector2)_tableSetup.CueBall.transform.position - pointerWorld;
 
-            // Pointer is in the cancel zone around the cue ball: revert to the pre-drag
-            // aim/power until it leaves the zone (which resumes aiming from scratch)
-            if (toBall.magnitude <= _cancelRadius)
+            // Pointer is in a cancel zone (around the cue ball or along the screen
+            // edges): revert to the pre-drag aim/power until it leaves the zone
+            // (which resumes aiming from scratch)
+            if (toBall.magnitude <= _cancelRadius || IsPointerNearScreenEdge(pointerPosition))
             {
                 RestorePreDragState();
                 return;
