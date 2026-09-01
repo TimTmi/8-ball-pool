@@ -15,7 +15,7 @@ namespace EightBall.Core
         private TurnManager _turnManager;
 
         [Header("Power")]
-        [Tooltip("Max cue pull-back distance (world units). Pointer distance from the cue ball maps 1:1 to the cue pull and is clamped here; full power is reached at this distance.")]
+        [Tooltip("Max cue pull-back distance (world units). Power is 0 at the cancel zone edge and pointer distance beyond it maps 1:1 to the cue pull, clamped here; full power is reached at cancel radius + this distance.")]
         [SerializeField] private float _maxPullDistance = 2.5f;
 
         [Header("Shot")]
@@ -198,9 +198,10 @@ namespace EightBall.Core
 
             if (!_uiController.IsPowerLocked)
             {
-                // Pointer distance pulls the cue back 1:1, capped at max pull
-                float pullDistance = Mathf.Min(toBall.magnitude, _maxPullDistance);
-                CurrentPower = pullDistance / _maxPullDistance;
+                // Power starts at the cancel zone edge and pulls the cue back 1:1
+                // from there, capped at max pull (full power = zone edge + max pull)
+                float pullDistance = Mathf.Min(toBall.magnitude - _cancelRadius, _maxPullDistance);
+                CurrentPower = Mathf.Max(0f, pullDistance) / _maxPullDistance;
             }
         }
 
