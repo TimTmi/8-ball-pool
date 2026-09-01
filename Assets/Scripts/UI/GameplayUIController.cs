@@ -82,7 +82,6 @@ namespace EightBall.UI
                 _spinBall.UnregisterCallback<PointerDownEvent>(OnHitPointPointerDown);
                 _spinBall.UnregisterCallback<PointerMoveEvent>(OnHitPointPointerMove);
                 _spinBall.UnregisterCallback<PointerUpEvent>(OnHitPointPointerUp);
-                _spinBall.UnregisterCallback<PointerLeaveEvent>(OnHitPointPointerUp);
                 _spinBall.UnregisterCallback<PointerCancelEvent>(OnHitPointPointerUp);
             }
 
@@ -182,7 +181,6 @@ namespace EightBall.UI
             _spinBall.RegisterCallback<PointerDownEvent>(OnHitPointPointerDown);
             _spinBall.RegisterCallback<PointerMoveEvent>(OnHitPointPointerMove);
             _spinBall.RegisterCallback<PointerUpEvent>(OnHitPointPointerUp);
-            _spinBall.RegisterCallback<PointerLeaveEvent>(OnHitPointPointerUp);
             _spinBall.RegisterCallback<PointerCancelEvent>(OnHitPointPointerUp);
 
             // Delay initial hit-dot placement until layout is resolved
@@ -274,10 +272,9 @@ namespace EightBall.UI
             if (!_isDraggingHitPoint) return;
             _isDraggingHitPoint = false;
 
+            // The pointer is captured, so Up/Cancel arrive here even off the element
             if (evt is PointerUpEvent pointerUp)
                 _spinBall.ReleasePointer(pointerUp.pointerId);
-            else if (evt is PointerLeaveEvent pointerLeave)
-                _spinBall.ReleasePointer(pointerLeave.pointerId);
             else if (evt is PointerCancelEvent pointerCancel)
                 _spinBall.ReleasePointer(pointerCancel.pointerId);
         }
