@@ -62,8 +62,8 @@ namespace EightBall.Gameplay
         }
 
         /// <summary>
-        /// Launch speed for a normalised power. Public so the aim preview draws the shot the
-        /// player is actually about to take.
+        /// Launch speed for a normalised power. Public because the aim preview draws its guide
+        /// at full speed (<c>power: 1f</c>) so the line always reaches the first contact.
         /// </summary>
         public float SpeedForPower(float power) => Mathf.Lerp(_minShotSpeed, _maxShotSpeed, Mathf.Clamp01(power));
 

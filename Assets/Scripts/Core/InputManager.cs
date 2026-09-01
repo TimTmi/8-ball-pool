@@ -31,8 +31,6 @@ namespace EightBall.Core
 
         private Camera _camera;
         private bool _isDragging;
-        /// <summary>True once the player has aimed during the current turn; the cue only shows then.</summary>
-        private bool _hasAim;
         private PowerBar _powerBar;
         private AimLine _aimLine;
 
@@ -43,7 +41,6 @@ namespace EightBall.Core
         // drags into the cancel zone around the cue ball
         private float _dragStartAimAngle;
         private float _dragStartPower;
-        private bool _dragStartHasAim;
 
         /// <summary>Aiming is only allowed once every ball has come to rest.</summary>
         private bool CanAim => !_isStriking && (_cueController == null || _cueController.IsTableSettled);
@@ -116,7 +113,6 @@ namespace EightBall.Core
                     _isDragging = true;
                     _dragStartAimAngle = CurrentAimAngle;
                     _dragStartPower = CurrentPower;
-                    _dragStartHasAim = _hasAim;
                 }
             }
             else if (pointer.press.isPressed && _isDragging)
@@ -170,7 +166,6 @@ namespace EightBall.Core
         {
             CurrentAimAngle = _dragStartAimAngle;
             CurrentPower = _dragStartPower;
-            _hasAim = _dragStartHasAim;
         }
 
         /// <summary>
@@ -196,8 +191,6 @@ namespace EightBall.Core
                 return;
             }
 
-            _hasAim = true;
-
             if (!_uiController.IsAimLocked)
             {
                 CurrentAimAngle = Mathf.Atan2(toBall.y, toBall.x) * Mathf.Rad2Deg;
@@ -220,8 +213,9 @@ namespace EightBall.Core
 
             GameObject cueStick = _tableSetup.CueStick;
 
-            // The cue is only on the table once the player has aimed during this turn
-            bool showCue = CanAim && _hasAim;
+            // The cue rests at the ball whenever the table is settled, at the current
+            // (default or last) angle with no pull-back until the player aims
+            bool showCue = CanAim;
             if (cueStick.activeSelf != showCue) cueStick.SetActive(showCue);
             if (!showCue) return;
 
@@ -261,8 +255,8 @@ namespace EightBall.Core
 
         private void UpdateAimLine()
         {
-            // The guide follows the cue: shown once the player has aimed, gone during the shot
-            bool showAimLine = CanAim && _hasAim;
+            // The guide follows the cue: shown whenever the cue is, gone during the shot
+            bool showAimLine = CanAim;
             if (!showAimLine)
             {
                 if (_aimLine != null) _aimLine.Hide();
@@ -279,12 +273,12 @@ namespace EightBall.Core
             var body = cueBall.GetComponent<Rigidbody2D>();
             Vector2 spin = _uiController != null ? _uiController.CurrentSpin : Vector2.zero;
 
-            // Same speed, spin and damping the shot will actually use, so the drawn path is the
-            // path the ball takes rather than a rough sketch of it
+            // The guide is an aiming aid, not a range readout: it runs the line at full shot
+            // speed so it always reaches the first contact, whatever power is set
             _aimLine.Show(new ShotPrediction.Request(
                 cueBall.transform.position,
                 direction,
-                _cueController.SpeedForPower(CurrentPower),
+                _cueController.SpeedForPower(1f),
                 spin,
                 body != null ? body.linearDamping : 0f,
                 cueBall.GetComponent<Collider2D>()));
@@ -321,9 +315,8 @@ namespace EightBall.Core
 
             if (!shotPlayed) yield break;
 
-            // Reset for next turn: no power and no cue until the player aims again
+            // Reset for next turn: no power carried over
             CurrentPower = 0f;
-            _hasAim = false;
             if (_uiController != null)
             {
                 _uiController.SetShootButtonActive(false);
