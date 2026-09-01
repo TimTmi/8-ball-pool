@@ -150,8 +150,8 @@
 }
 
 .lock-button--locked {
-    border-color: rgb(255, 200, 60);
-    -unity-background-image-tint-color: rgb(255, 200, 60);
+    border-color: rgb(235, 70, 60);
+    -unity-background-image-tint-color: rgb(235, 70, 60);
 }
 
 .lock-badge {
@@ -159,8 +159,8 @@
     position: absolute;
     width: 34px;
     height: 34px;
-    top: -8px;
-    right: -8px;
+    top: 4px;
+    right: 4px;
     -unity-background-scale-mode: scale-to-fit;
     background-image: resource("Sprites/Icon_Lock");
 }
