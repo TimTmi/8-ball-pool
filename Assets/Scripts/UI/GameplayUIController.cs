@@ -186,7 +186,8 @@ namespace EightBall.UI
             // Delay initial hit-dot placement until layout is resolved
             _spinBall.RegisterCallback<GeometryChangedEvent>(_ => RefreshHitDot());
 
-            // Close panel when clicking anywhere outside it, and track which presses the HUD owns
+            // Track which presses the HUD owns, and close the panel if a pointer
+            // lands outside it (e.g. a second finger while a spin gesture is active)
             _root.RegisterCallback<PointerDownEvent>(OnRootPointerDown, TrickleDown.TrickleDown);
             _root.RegisterCallback<PointerUpEvent>(OnRootPointerReleased, TrickleDown.TrickleDown);
             _root.RegisterCallback<PointerCancelEvent>(OnRootPointerReleased, TrickleDown.TrickleDown);
@@ -194,9 +195,14 @@ namespace EightBall.UI
 
         // ── Compact spin button ───────────────────────────────────────
 
+        /// <summary>
+        /// Opening the panel is its own tap: press shows the panel and the release
+        /// ends that gesture without touching spin. The next press-drag-release on
+        /// the ball sets the spin and closes the panel (<see cref="OnHitPointPointerUp"/>).
+        /// </summary>
         private void OnSpinButtonPressed(PointerDownEvent evt)
         {
-            SetPanelOpen(!_panelOpen);
+            SetPanelOpen(true);
         }
 
         // ── Expanded panel open/close ─────────────────────────────────
@@ -214,8 +220,8 @@ namespace EightBall.UI
         }
 
         /// <summary>
-        /// Root-level press handler: closes the panel on a tap outside it and marks
-        /// presses the HUD owns so InputManager ignores them for aim/power.
+        /// Root-level press handler: marks presses the HUD owns so InputManager ignores
+        /// them for aim/power, and closes the panel when a press lands outside it.
         /// </summary>
         private void OnRootPointerDown(PointerDownEvent evt)
         {
@@ -277,6 +283,9 @@ namespace EightBall.UI
                 _spinBall.ReleasePointer(pointerUp.pointerId);
             else if (evt is PointerCancelEvent pointerCancel)
                 _spinBall.ReleasePointer(pointerCancel.pointerId);
+
+            // The spin gesture ends with the finger lift, so the panel closes with it
+            SetPanelOpen(false);
         }
 
         private void UpdateSpinFromLocalPosition(Vector2 localPos)
