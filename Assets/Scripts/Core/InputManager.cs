@@ -51,8 +51,6 @@ namespace EightBall.Core
         /// <summary>Cue length in world units; the sprite is authored at this size.</summary>
         private const float CueLength = 8f;
 
-        /// <summary>Comfortably past the ~11u table diagonal, so the sweep always reaches a rail.</summary>
-        private const float AimCastDistance = 12f;
 
         /// <summary>Distance from the cue ball centre to the cue centre with the tip resting at the ball.</summary>
         private static float CueRestDistance => (CueLength * 0.5f) + TableLayout.BallRadius + 0.1f;
@@ -274,15 +272,22 @@ namespace EightBall.Core
             if (_aimLine == null && _tableSetup != null && _tableSetup.AimLine != null)
                 _aimLine = _tableSetup.AimLine.GetComponent<AimLine>();
 
-            if (_aimLine == null || _tableSetup.CueBall == null) return;
+            GameObject cueBall = _tableSetup != null ? _tableSetup.CueBall : null;
+            if (_aimLine == null || cueBall == null || _cueController == null) return;
 
-            Vector2 origin = _tableSetup.CueBall.transform.position;
             Vector2 direction = Quaternion.Euler(0f, 0f, CurrentAimAngle) * Vector3.right;
+            var body = cueBall.GetComponent<Rigidbody2D>();
+            Vector2 spin = _uiController != null ? _uiController.CurrentSpin : Vector2.zero;
 
-            var prediction = ShotPrediction.Predict(
-                origin, direction, _tableSetup.CueBall.GetComponent<Collider2D>(), AimCastDistance);
-
-            _aimLine.Show(origin, prediction);
+            // Same speed, spin and damping the shot will actually use, so the drawn path is the
+            // path the ball takes rather than a rough sketch of it
+            _aimLine.Show(new ShotPrediction.Request(
+                cueBall.transform.position,
+                direction,
+                _cueController.SpeedForPower(CurrentPower),
+                spin,
+                body != null ? body.linearDamping : 0f,
+                cueBall.GetComponent<Collider2D>()));
         }
 
         private void HandleShoot()
@@ -310,7 +315,8 @@ namespace EightBall.Core
             _isStriking = true;
             yield return StrokeCue(aimAngle, power);
 
-            bool shotPlayed = _cueController.Shoot(aimAngle, power);
+            Vector2 spin = _uiController != null ? _uiController.CurrentSpin : Vector2.zero;
+            bool shotPlayed = _cueController.Shoot(aimAngle, power, spin);
             _isStriking = false;
 
             if (!shotPlayed) yield break;

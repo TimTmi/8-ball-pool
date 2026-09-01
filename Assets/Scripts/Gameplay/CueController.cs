@@ -34,9 +34,10 @@ namespace EightBall.Gameplay
 
         /// <summary>
         /// Strikes the cue ball along <paramref name="aimAngleDegrees"/> with a normalised
-        /// <paramref name="power"/> (0–1). Returns false if the shot was rejected.
+        /// <paramref name="power"/> (0-1) and the given <paramref name="spin"/> hit point.
+        /// Returns false if the shot was rejected.
         /// </summary>
-        public bool Shoot(float aimAngleDegrees, float power)
+        public bool Shoot(float aimAngleDegrees, float power, Vector2 spin)
         {
             if (!IsTableSettled) return false;
 
@@ -49,13 +50,22 @@ namespace EightBall.Gameplay
 
             float angleRadians = aimAngleDegrees * Mathf.Deg2Rad;
             var direction = new Vector2(Mathf.Cos(angleRadians), Mathf.Sin(angleRadians));
-            float speed = Mathf.Lerp(_minShotSpeed, _maxShotSpeed, Mathf.Clamp01(power));
 
             RefreshBalls();
-            cueBall.Launch(direction, speed);
+
+            var cueBallSpin = cueBall.GetComponent<CueBallSpin>();
+            if (cueBallSpin != null) cueBallSpin.SetSpin(spin);
+
+            cueBall.Launch(direction, SpeedForPower(power));
             IsTableSettled = false;
             return true;
         }
+
+        /// <summary>
+        /// Launch speed for a normalised power. Public so the aim preview draws the shot the
+        /// player is actually about to take.
+        /// </summary>
+        public float SpeedForPower(float power) => Mathf.Lerp(_minShotSpeed, _maxShotSpeed, Mathf.Clamp01(power));
 
         private void FixedUpdate()
         {
@@ -63,6 +73,7 @@ namespace EightBall.Gameplay
 
             ReturnScratchedCueBall();
             StabilizeBalls();
+            ClearCueBallSpin();
 
             IsTableSettled = true;
             OnTableSettled?.Invoke();
@@ -88,6 +99,15 @@ namespace EightBall.Gameplay
 
             cueBall.Restore();
             cueBall.transform.localPosition = TableLayout.HeadSpot;
+        }
+
+        /// <summary>Any spin left over must not leak into the next shot.</summary>
+        private void ClearCueBallSpin()
+        {
+            Ball cueBall = GetCueBall();
+            var cueBallSpin = cueBall != null ? cueBall.GetComponent<CueBallSpin>() : null;
+
+            if (cueBallSpin != null) cueBallSpin.ClearSpin();
         }
 
         private bool AnyBallMoving()

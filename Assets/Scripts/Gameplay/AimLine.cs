@@ -27,10 +27,15 @@ namespace EightBall.Gameplay
         [SerializeField] private Color _ghostColor = new Color(1f, 1f, 1f, 0.25f);
         [SerializeField] private Color _struckBallColor = new Color(1f, 0.82f, 0.25f, 0.8f);
 
+        [Tooltip("Where the cue ball goes after contact — the top/back spin readout.")]
+        [SerializeField] private Color _cueAfterColor = new Color(0.45f, 0.85f, 1f, 0.8f);
+
         /// <summary>Enough for the longest path across the table plus the struck-ball line.</summary>
         private const int MaxDots = 96;
 
         private readonly List<SpriteRenderer> _dots = new List<SpriteRenderer>(MaxDots);
+        private readonly List<Vector3> _approachPath = new List<Vector3>(96);
+        private readonly List<Vector3> _cueAfterPath = new List<Vector3>(32);
         private SpriteRenderer _ghostBall;
 
         // Two discs rather than one shared sprite: the ghost ball is several times a dot wide, so
@@ -51,18 +56,19 @@ namespace EightBall.Gameplay
         }
 
         /// <summary>Draws the guide for a shot leaving <paramref name="from"/>.</summary>
-        public void Show(Vector2 from, in ShotPrediction.Result prediction)
+        /// <summary>Predicts the shot described by <paramref name="request"/> and draws the guide.</summary>
+        public void Show(in ShotPrediction.Request request)
         {
             if (!gameObject.activeSelf) gameObject.SetActive(true);
 
-            // Both runs start at the rim of the ball they leave, not its centre, so the first dot
-            // does not sit on top of the ball.
-            Vector2 towardsContact = (prediction.ContactPoint - from).normalized;
-            Vector2 pathStart = from + towardsContact * TableLayout.BallRadius;
-            int dotsUsed = PlaceDots(pathStart, prediction.ContactPoint, _pathColor, 0);
+            ShotPrediction.Result prediction = ShotPrediction.Predict(request, _approachPath, _cueAfterPath);
+
+            int dotsUsed = PlaceDotsAlong(_approachPath, _pathColor, 0);
+            dotsUsed = PlaceDotsAlong(_cueAfterPath, _cueAfterColor, dotsUsed);
 
             if (prediction.StruckBall != null)
             {
+                // Straight run from the struck ball's rim, so the first dot clears the ball
                 Vector2 struckBallCentre = prediction.StruckBall.transform.position;
                 Vector2 struckBallStart = struckBallCentre + prediction.StruckBallDirection * TableLayout.BallRadius;
                 Vector2 struckBallEnd = struckBallStart + prediction.StruckBallDirection * _struckBallLineLength;
@@ -81,6 +87,43 @@ namespace EightBall.Gameplay
         }
 
         /// <summary>Lays dots along a segment and returns the next free dot index.</summary>
+        /// <summary>
+        /// Lays dots at even spacing along a polyline, carrying the leftover distance across
+        /// vertices so a curved path is dotted as evenly as a straight one.
+        /// </summary>
+        private int PlaceDotsAlong(List<Vector3> path, Color color, int nextDot)
+        {
+            if (path.Count < 2) return nextDot;
+
+            float sinceLastDot = 0f;
+
+            for (int i = 1; i < path.Count && nextDot < MaxDots; i++)
+            {
+                Vector2 from = path[i - 1];
+                Vector2 to = path[i];
+
+                float segment = Vector2.Distance(from, to);
+                if (segment <= 0f) continue;
+
+                Vector2 step = (to - from) / segment;
+                float alongSegment = _dotSpacing - sinceLastDot;
+
+                while (alongSegment <= segment && nextDot < MaxDots)
+                {
+                    SpriteRenderer dot = GetDot(nextDot++);
+                    dot.color = color;
+                    dot.transform.position = from + step * alongSegment;
+                    if (!dot.gameObject.activeSelf) dot.gameObject.SetActive(true);
+
+                    alongSegment += _dotSpacing;
+                }
+
+                sinceLastDot = segment - (alongSegment - _dotSpacing);
+            }
+
+            return nextDot;
+        }
+
         private int PlaceDots(Vector2 from, Vector2 to, Color color, int nextDot)
         {
             Vector2 span = to - from;

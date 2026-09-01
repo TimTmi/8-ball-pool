@@ -37,7 +37,19 @@ namespace EightBall.Gameplay
             }
 
             Vector2 slide = velocity - outward * reboundSpeed;
-            body.linearVelocity = slide * _slideRetention + outward * (reboundSpeed * _reboundRetention);
+            Vector2 rebound = slide * _slideRetention + outward * (reboundSpeed * _reboundRetention);
+
+            // Side spin swings the angle off the rail — the main thing side spin is for. Handled
+            // here rather than on the ball so one component owns the whole rail response and the
+            // two callbacks cannot race each other for the same velocity.
+            var cueBallSpin = collision.collider.GetComponent<CueBallSpin>();
+            if (cueBallSpin != null)
+            {
+                rebound = SpinModel.CushionRebound(rebound, cueBallSpin.SideSpin);
+                cueBallSpin.SpendOnCushion();
+            }
+
+            body.linearVelocity = rebound;
         }
     }
 }

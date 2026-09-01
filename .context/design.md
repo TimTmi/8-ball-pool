@@ -7,7 +7,7 @@ Monolithic Unity client architecture. The game uses a scene-based flow consistin
 Status is marked per component; unmarked bullet details describe the target design.
 
 - **Input Manager** *(implemented: `InputManager.cs`)*: Captures raw touch/drag input and translates it to aim angle, power, and spin. Controls the lock states for aim and power.
-- **Trajectory Predictor** *(partially implemented: `ShotPrediction.cs`, `AimLine.cs`)*: `ShotPrediction` sweeps the cue ball shape along the aim direction to find the first contact; `AimLine` draws the dotted path, a ghost ball at contact, and the struck ball's departure direction. Straight-line only — spin and post-contact cue-ball travel are still to come.
+- **Trajectory Predictor** *(partially implemented: `ShotPrediction.cs`, `AimLine.cs`)*: `ShotPrediction` sweeps the cue ball shape along the aim direction to find the first contact; `AimLine` draws the dotted path, a ghost ball at contact, and the struck ball's departure direction. Spin is modelled: the path curves with side spin and the post-contact cue-ball run is drawn. Rail bounces are still not predicted.
 - **Physics Engine (Unity)** *(implemented)*: Handles runtime collision detection and rigidbody physics for the balls. Shot execution lives in `CueController`/`Ball`; cushion rebound damping in `Cushion`.
 - **Game State Manager** *(planned, Phase 4)*: Enforces standard 8-ball rules (legal breaks, valid hits, pocketing logic, win/loss conditions) and switches turns between the two local players.
 - **UI Controller** *(implemented: `GameplayUIController.cs`, `MainMenuController.cs`)*: Manages minimal screens. Gameplay UI includes lock toggles, spin control UI, and the Shoot confirmation button.

@@ -54,3 +54,23 @@
 **Context**: The aim dots needed a thin outline to stay readable against the felt, and the same discs are drawn in three different colours.
 **Decision**: `AimLine.CreateDiscSprite` bakes the rim as black pixels and leaves the middle white. `SpriteRenderer.color` multiplies, so the tint reaches only the fill — black stays black at any colour — and one sprite serves every dot. Rim thickness is passed per disc (`RimFraction`) so the dot and the much larger ghost ball come out the same thickness in world units, not the same fraction.
 **Rationale**: The alternative, a second darker renderer behind each dot, would double an already pooled renderer count for a sub-pixel effect. Matching world thickness rather than relative thickness is what makes an outline read as a consistent stroke weight instead of growing with whatever it wraps.
+
+## [2026-09-01] Spin Follows the 8 Ball Pool Guide, Not Real-Table Squirt
+**Context**: Side spin can send the cue ball either way. Real level-cue play produces squirt — strike left, the ball leaves to the right. The 8 Ball Pool spin guide states the opposite: "If you add LEFT SPIN to the Cue Ball, it moves towards the Left Hand side from the Cue Ball's point of view."
+**Decision**: Follow the guide. Left spin curves the ball left, right spin right, and side spin's headline use is swinging the rebound angle off a cushion.
+**Rationale**: This project is modelled on that game, and it was given as the reference for this work. Squirt also makes side spin a pure penalty until throw and cushion effects exist to pay for it. Reversing it is one sign flip in `SpinModel.Curve` and `CushionRebound` if the real-table behaviour is ever wanted instead.
+
+## [2026-09-01] One Spin Model, Shared by the Shot and the Preview
+**Context**: An aim line that curves is only worth drawing if it curves the way the ball will. Two implementations would drift apart the first time either was tuned.
+**Decision**: `SpinModel` holds every formula — contact velocity, curve, cushion rebound, decay. `CueBallSpin` and `Cushion` apply them to the live shot; `ShotPrediction` steps the same functions for the preview, reading the cue ball's real `linearDamping` and `CueController.SpeedForPower`.
+**Rationale**: The prediction/simulation parity design.md asks for, made structural instead of aspirational. Tuning `ContactStrength` moves the drawn curve and the real shot together.
+
+## [2026-09-01] The Rail Owns the Whole Rebound, Spin Included
+**Context**: Side spin has to alter the rebound off a cushion, but `Cushion` and `CueBallSpin` would both be handling the same collision, and Unity does not define which component's callback runs first.
+**Decision**: `Cushion` reads `CueBallSpin.SideSpin` off the colliding body and applies `SpinModel.CushionRebound` itself, then tells the ball to spend most of that spin.
+**Rationale**: One owner for the rail response means no race for the same velocity. `CushionRebound` preserves speed and only turns the direction, since a cushion never hands energy back and the rail's own damping has already been applied by that point.
+
+## [2026-09-01] The Preview Steps at the Physics Rate
+**Context**: `ShotPrediction` originally walked at a fixed 0.02s while the project runs physics at 0.01s.
+**Decision**: The walk uses `Time.fixedDeltaTime`, capped by step count and by a 15u path length.
+**Rationale**: Measured against the same model at the physics rate, the coarser clock integrated damping badly enough to draw the line up to 0.22u — over two ball radii — past where the ball really stops. Matching the clock makes the two identical by construction rather than by luck, and follows the setting if it ever changes again. Cost is 6-95 casts for a realistic shot; only a soft shot into an open table reaches the cap.

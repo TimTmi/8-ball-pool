@@ -14,7 +14,7 @@
 ## Phase 3: Trajectory & Physics Tuning
 - [x] Apply shot physics to the cue ball and damped cushion rebound on the rails
 - [x] Implement basic trajectory prediction line
-- [ ] Add spin effect to physics simulation and trajectory
+- [x] Add spin effect to physics simulation and trajectory
 - [ ] Tune physics materials (bounciness, friction) for realistic feel
 
 ## Phase 4: Game Loop & Rules

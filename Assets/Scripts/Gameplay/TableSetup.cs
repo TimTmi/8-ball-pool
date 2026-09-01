@@ -358,6 +358,9 @@ namespace EightBall.Gameplay
             if (ball == null) ball = go.AddComponent<Ball>();
             ball.Restore(); // A rebuild puts any pocketed ball back in play
 
+            // Only the cue ball carries spin.
+            if (ballNumber == 0 && go.GetComponent<CueBallSpin>() == null) go.AddComponent<CueBallSpin>();
+
             go.tag = ballNumber == 0 ? "CueBall" : "Ball";
 
             return go;
