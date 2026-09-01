@@ -65,7 +65,10 @@ namespace EightBall.Gameplay
         /// <summary>What the cue ball meets first.</summary>
         public readonly struct Result
         {
+            /// <summary>True if the cue ball reaches a ball or a rail; false if it just runs out.</summary>
             public readonly bool HasContact;
+
+            /// <summary>Where the cue ball centre sits at that contact.</summary>
             public readonly Vector2 ContactPoint;
 
             /// <summary>The ball that gets struck, or null when a rail comes first.</summary>
@@ -125,6 +128,13 @@ namespace EightBall.Gameplay
                     if (struckBall == null)
                     {
                         AddVertex(contacted ? cueAfterPath : approachPath, position, true);
+
+                        // Reaching a rail on the way in is still a contact worth marking, so the
+                        // ghost shows where the cue ball comes to rest against the cushion. A rail
+                        // after the first ball is only where the preview runs out, so the ghost
+                        // stays on the ball contact it already found.
+                        if (!contacted) result = new Result(true, position, null, Vector2.zero);
+
                         break;
                     }
 
