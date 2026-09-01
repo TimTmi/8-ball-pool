@@ -143,8 +143,9 @@ namespace EightBall.Core
                     }
                     else
                     {
-                        // Show shoot button if we actually aimed/powered up
-                        if (_uiController != null)
+                        // The shot only exists once power has been set: an unarmed
+                        // release (power still 0) leaves the button red
+                        if (_uiController != null && CurrentPower > 0f)
                         {
                             _uiController.SetShootButtonUnlocked(true);
                         }
