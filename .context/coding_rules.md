@@ -81,6 +81,7 @@ Refactor immediately when:
 ---
 
 ## Interaction
+- Delegate to the user any operation you cannot do, cannot do cleanly or conveniently, or cannot guarantee the output/quality of (e.g., Unity Editor play-testing, CLI builds, visual verification)
 - When service/domain complexity grows, update `design.md` or add a focused `.context` file before implementation
 - Ask for clarification instead of guessing critical business rules
 - Prefer incremental implementation over massive one-shot generation
