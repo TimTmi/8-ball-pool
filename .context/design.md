@@ -7,7 +7,7 @@ Monolithic Unity client architecture. The game uses a scene-based flow consistin
 Status is marked per component; unmarked bullet details describe the target design.
 
 - **Input Manager** *(implemented: `InputManager.cs`)*: Captures raw touch/drag input and translates it to aim angle, power, and spin. Controls the lock states for aim and power.
-- **Trajectory Predictor** *(planned, Phase 3)*: Simulates physics steps ahead of time to render the predicted path of the cue ball and object balls, incorporating spin and collisions.
+- **Trajectory Predictor** *(partially implemented: `ShotPrediction.cs`, `AimLine.cs`)*: `ShotPrediction` sweeps the cue ball shape along the aim direction to find the first contact; `AimLine` draws the dotted path, a ghost ball at contact, and the struck ball's departure direction. Straight-line only — spin and post-contact cue-ball travel are still to come.
 - **Physics Engine (Unity)** *(implemented)*: Handles runtime collision detection and rigidbody physics for the balls. Shot execution lives in `CueController`/`Ball`; cushion rebound damping in `Cushion`.
 - **Game State Manager** *(planned, Phase 4)*: Enforces standard 8-ball rules (legal breaks, valid hits, pocketing logic, win/loss conditions) and switches turns between the two local players.
 - **UI Controller** *(implemented: `GameplayUIController.cs`, `MainMenuController.cs`)*: Manages minimal screens. Gameplay UI includes lock toggles, spin control UI, and the Shoot confirmation button.
@@ -15,7 +15,7 @@ Status is marked per component; unmarked bullet details describe the target desi
 
 ## Communication
 - User input triggers UI state changes (e.g., revealing the Shoot button).
-- Input Manager sends aim/power/spin parameters to the Trajectory Predictor every frame during the aim phase.
+- Input Manager runs `ShotPrediction` every frame during the aim phase and feeds the result to `AimLine`.
 - Pressing "Shoot" passes final parameters to the Cue controller, applying physical forces to the Cue Ball.
 - The Game State Manager listens to collision events and pocket triggers to evaluate rules after all balls stop moving.
 

@@ -34,3 +34,18 @@
 **Context**: Pocketing a ball needs the ball to be able to enter the pocket. The rails were four unbroken boxes running the full length of the table, so a ball could only ever skim across a pocket trigger while bouncing off the cushion in front of it.
 **Decision**: `TableLayout.GetRailSegments()` returns six rail runs with a `PocketMouthHalfWidth` (0.45u, ~1.8 ball widths) gap at every pocket, and `Pocket` captures a ball only when the distance between centres is within `PocketRadius` — not on trigger overlap.
 **Rationale**: Trigger overlap fires at centre distance 0.65u, which would swallow any ball merely rolling along a rail past a pocket. Keeping the trigger wide but testing the centre gives an early, cheap broad phase with a capture point that matches what the player sees. `Ball` carries an out-of-bounds failsafe so a ball that squeezes past a mouth is pocketed instead of rolling away forever, which would also leave the table permanently unsettled.
+
+## [2026-09-01] Aim Line Is One Shape Sweep, Not a Stepped Simulation
+**Context**: The trajectory line needs the cue ball's path and where it first makes contact.
+**Decision**: `ShotPrediction.Predict` runs a single `Physics2D.CircleCast` of the cue ball's own shape along the aim direction and reads `RaycastHit2D.centroid` as the contact position. Pockets are excluded via `useTriggers = false`, and the cue ball's own collider is skipped or it would hit itself immediately.
+**Rationale**: With no spin in the shot yet the path is a straight line, so a sweep is exact where a stepped integration would only approximate it — and it is one physics query per frame instead of dozens. When spin lands (Phase 3), this becomes the first segment of a stepped walk rather than being thrown away.
+
+## [2026-09-01] The Sweep Radius Shortfall Is Kept Tiny
+**Context**: The sweep uses slightly less than ball radius so a ball already resting against the cue ball does not register as an instant hit. The size of that shortfall is not cosmetic: it decides where contact is reported, which sets the drawn cut angle.
+**Decision**: `CastRadiusScale = 0.999f`, not the 0.98 first written.
+**Rationale**: Measured against exact geometry, 0.98 drew the cut up to 5.2° off on thin cuts and missed the thinnest legal cuts entirely (a 0.005u sliver of contact offsets). 0.999 holds the error under 0.2° across the whole range at negligible cost. Thin cuts are where an aim line most needs to be trusted.
+
+## [2026-09-01] Guide Visuals Are Sprite Dots Sized From the Ball
+**Context**: The line needs to render with no art in the repository, and the table has just been rescaled once already (ball 0.5u -> 0.2u).
+**Decision**: `AimLine` pools small `SpriteRenderer` dots sharing one runtime-generated soft-edged disc, following `PowerBar`'s approach, and its spacing/size defaults derive from `TableLayout.BallDiameter` rather than being absolute.
+**Rationale**: Sidesteps `LineRenderer` material and sorting questions under URP 2D, and matches the convention pocket sizes already follow, so the guide rescales with the table instead of silently becoming wrong the next time ball size moves.

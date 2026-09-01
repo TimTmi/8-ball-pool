@@ -32,6 +32,7 @@ namespace EightBall.Gameplay
         public GameObject CueBall    { get; private set; }
         public GameObject CueStick   { get; private set; }
         public GameObject PowerBar   { get; private set; }
+        public GameObject AimLine    { get; private set; }
         public GameObject[] Balls    { get; private set; } // [0]=cue, [1–15]=object balls
 
         private void Start()
@@ -50,6 +51,7 @@ namespace EightBall.Gameplay
             SetupBalls();
             SetupCueStick();
             SetupPowerBar();
+            SetupAimLine();
         }
 
         // ── Felt ──────────────────────────────────────────────────────────────
@@ -419,6 +421,20 @@ namespace EightBall.Gameplay
                 existing.gameObject.AddComponent<PowerBar>();
             }
             PowerBar = existing.gameObject;
+        }
+
+        // ── Aim Line ──────────────────────────────────────────────────────────
+
+        private void SetupAimLine()
+        {
+            var existing = transform.Find("AimLine");
+            if (existing == null)
+            {
+                existing = new GameObject("AimLine").transform;
+                existing.SetParent(transform, false);
+                existing.gameObject.AddComponent<AimLine>();
+            }
+            AimLine = existing.gameObject;
         }
 
         // ── Sprite Loading ────────────────────────────────────────────────────

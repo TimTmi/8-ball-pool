@@ -34,6 +34,7 @@ namespace EightBall.Core
         /// <summary>True once the player has aimed during the current turn; the cue only shows then.</summary>
         private bool _hasAim;
         private PowerBar _powerBar;
+        private AimLine _aimLine;
 
         /// <summary>True while the cue is being driven into the ball, which owns the cue transform.</summary>
         private bool _isStriking;
@@ -49,6 +50,9 @@ namespace EightBall.Core
 
         /// <summary>Cue length in world units; the sprite is authored at this size.</summary>
         private const float CueLength = 8f;
+
+        /// <summary>Comfortably past the ~11u table diagonal, so the sweep always reaches a rail.</summary>
+        private const float AimCastDistance = 12f;
 
         /// <summary>Distance from the cue ball centre to the cue centre with the tip resting at the ball.</summary>
         private static float CueRestDistance => (CueLength * 0.5f) + TableLayout.BallRadius + 0.1f;
@@ -87,6 +91,7 @@ namespace EightBall.Core
             HandleDragInput();
             UpdateCueVisuals();
             UpdatePowerBar();
+            UpdateAimLine();
         }
 
         private void HandleDragInput()
@@ -254,6 +259,30 @@ namespace EightBall.Core
 
             if (_powerBar != null && _tableSetup.CueBall != null)
                 _powerBar.Show(_tableSetup.CueBall.transform.position, CurrentPower);
+        }
+
+        private void UpdateAimLine()
+        {
+            // The guide follows the cue: shown once the player has aimed, gone during the shot
+            bool showAimLine = CanAim && _hasAim;
+            if (!showAimLine)
+            {
+                if (_aimLine != null) _aimLine.Hide();
+                return;
+            }
+
+            if (_aimLine == null && _tableSetup != null && _tableSetup.AimLine != null)
+                _aimLine = _tableSetup.AimLine.GetComponent<AimLine>();
+
+            if (_aimLine == null || _tableSetup.CueBall == null) return;
+
+            Vector2 origin = _tableSetup.CueBall.transform.position;
+            Vector2 direction = Quaternion.Euler(0f, 0f, CurrentAimAngle) * Vector3.right;
+
+            var prediction = ShotPrediction.Predict(
+                origin, direction, _tableSetup.CueBall.GetComponent<Collider2D>(), AimCastDistance);
+
+            _aimLine.Show(origin, prediction);
         }
 
         private void HandleShoot()
