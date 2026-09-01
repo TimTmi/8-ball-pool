@@ -192,7 +192,9 @@ namespace EightBall.Editor
 
             if (isStripe)
             {
-                int bandHalf = size / 5;
+                // Real stripe balls: white poles with a coloured equator band
+                // covering about half the ball diameter.
+                int bandHalf = Mathf.RoundToInt(r * 0.5f);
                 for (int x = 0; x < size; x++)
                 {
                     for (int y = cy - bandHalf; y <= cy + bandHalf; y++)
@@ -204,10 +206,10 @@ namespace EightBall.Editor
                 }
             }
 
-            // Highlight
-            DrawFilledCircle(tex, cx - r / 4, cy + r / 4, r / 5, new Color(1f, 1f, 1f, 0.55f));
-            // Center dot (white circle for number area)
-            DrawFilledCircle(tex, cx, cy, r / 5, new Color(1f, 1f, 1f, 0.9f));
+            // Number patch: small white circle, about one third of the ball
+            // diameter, as on real balls.
+            int numberRadius = Mathf.Max(3, r / 3);
+            DrawFilledCircle(tex, cx, cy, numberRadius, Color.white);
 
             tex.Apply();
             return tex;
