@@ -116,23 +116,65 @@
 }
 
 .lock-toggles {
+    flex-direction: row;
     background-color: rgba(0, 0, 0, 0.5);
     padding: 10px;
     border-radius: 10px;
 }
 
-.lock-toggles > Toggle {
-    color: white;
-    font-size: 20px;
+/* Icon lock buttons: aim/power icon fills the button; a padlock badge appears
+   on top while locked (locked class is toggled by GameplayUIController). */
+.lock-button {
+    width: 92px;
+    height: 92px;
+    background-image: none;
+    -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: rgb(235, 235, 235);
+    border-radius: 14px;
+    border-width: 3px;
+    border-color: rgba(255, 255, 255, 0.25);
+    margin: 2px;
+}
+
+.lock-button--aim {
+    background-image: resource("Sprites/Icon_Aim");
+}
+
+.lock-button--power {
+    background-image: resource("Sprites/Icon_Power");
+}
+
+.lock-button:hover {
+    border-color: rgba(255, 255, 255, 0.6);
+    scale: 1.06 1.06;
+}
+
+.lock-button--locked {
+    border-color: rgb(255, 200, 60);
+    -unity-background-image-tint-color: rgb(255, 200, 60);
+}
+
+.lock-badge {
+    display: none;
+    position: absolute;
+    width: 34px;
+    height: 34px;
+    top: -8px;
+    right: -8px;
+    -unity-background-scale-mode: scale-to-fit;
+    background-image: resource("Sprites/Icon_Lock");
+}
+
+.lock-button--locked .lock-badge {
+    display: flex;
 }
 
 .shoot-button {
     width: 150px;
     height: 80px;
-    font-size: 30px;
-    -unity-font-style: bold;
+    background-image: resource("Sprites/Icon_Shoot");
+    -unity-background-scale-mode: scale-to-fit;
     background-color: rgb(200, 50, 50);
-    color: white;
     border-radius: 40px;
 }
 

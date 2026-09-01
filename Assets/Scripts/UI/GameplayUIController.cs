@@ -25,8 +25,8 @@ namespace EightBall.UI
         // ── UI element references ─────────────────────────────────────
 
         private Button _shootButton;
-        private Toggle _lockAimToggle;
-        private Toggle _lockPowerToggle;
+        private Button _lockAimButton;
+        private Button _lockPowerButton;
         private Label _turnLabel;
         private VisualElement _bottomBar;
 
@@ -50,6 +50,7 @@ namespace EightBall.UI
         // ── Half-size constants (pixels) for indicator placement ──────
         private const float ButtonDotHalf = 7f;   // half of 14px dot
         private const float HitDotHalf = 11f;     // half of 22px dot
+        private const string LockedClass = "lock-button--locked";
 
         // ── Lifecycle ─────────────────────────────────────────────────
 
@@ -62,7 +63,7 @@ namespace EightBall.UI
             if (_root == null) return;
 
             BindShootButton();
-            BindLockToggles();
+            BindLockButtons();
             BindSpinButton();
             BindSpinPanel();
             _turnLabel = _root.Q<Label>("player-turn-label");
@@ -73,6 +74,12 @@ namespace EightBall.UI
         {
             if (_shootButton != null)
                 _shootButton.clicked -= OnShootClicked;
+
+            if (_lockAimButton != null)
+                _lockAimButton.clicked -= OnAimLockClicked;
+
+            if (_lockPowerButton != null)
+                _lockPowerButton.clicked -= OnPowerLockClicked;
 
             if (_spinButton != null)
                 _spinButton.UnregisterCallback<PointerDownEvent>(OnSpinButtonPressed);
@@ -117,9 +124,7 @@ namespace EightBall.UI
         {
             IsAimLocked = false;
             IsPowerLocked = false;
-
-            if (_lockAimToggle != null) _lockAimToggle.SetValueWithoutNotify(false);
-            if (_lockPowerToggle != null) _lockPowerToggle.SetValueWithoutNotify(false);
+            RefreshLockButtons();
         }
 
         /// <summary>
@@ -146,15 +151,41 @@ namespace EightBall.UI
             if (_turnLabel != null) _turnLabel.text = text;
         }
 
-        private void BindLockToggles()
+        private void BindLockButtons()
         {
-            _lockAimToggle = _root.Q<Toggle>("lock-aim-toggle");
-            if (_lockAimToggle != null)
-                _lockAimToggle.RegisterValueChangedCallback(evt => IsAimLocked = evt.newValue);
+            _lockAimButton = _root.Q<Button>("lock-aim-toggle");
+            if (_lockAimButton != null)
+                _lockAimButton.clicked += OnAimLockClicked;
 
-            _lockPowerToggle = _root.Q<Toggle>("lock-power-toggle");
-            if (_lockPowerToggle != null)
-                _lockPowerToggle.RegisterValueChangedCallback(evt => IsPowerLocked = evt.newValue);
+            _lockPowerButton = _root.Q<Button>("lock-power-toggle");
+            if (_lockPowerButton != null)
+                _lockPowerButton.clicked += OnPowerLockClicked;
+        }
+
+        private void OnAimLockClicked() => SetAimLocked(!IsAimLocked);
+
+        private void OnPowerLockClicked() => SetPowerLocked(!IsPowerLocked);
+
+        private void SetAimLocked(bool locked)
+        {
+            IsAimLocked = locked;
+            RefreshLockButtons();
+        }
+
+        private void SetPowerLocked(bool locked)
+        {
+            IsPowerLocked = locked;
+            RefreshLockButtons();
+        }
+
+        /// <summary>Shows the padlock badge and accent while a lock button is engaged.</summary>
+        private void RefreshLockButtons()
+        {
+            if (_lockAimButton != null)
+                _lockAimButton.EnableInClassList(LockedClass, IsAimLocked);
+
+            if (_lockPowerButton != null)
+                _lockPowerButton.EnableInClassList(LockedClass, IsPowerLocked);
         }
 
         private void BindSpinButton()
@@ -248,7 +279,7 @@ namespace EightBall.UI
         {
             while (target != null)
             {
-                if (target == _shootButton || target == _lockAimToggle || target == _lockPowerToggle
+                if (target == _shootButton || target == _lockAimButton || target == _lockPowerButton
                     || target == _spinButton || target == _spinPanel)
                 {
                     return true;

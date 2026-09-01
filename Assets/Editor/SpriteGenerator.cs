@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
+using UnityEngine;
 using UnityEngine;
 
 namespace EightBall.Editor
@@ -26,6 +28,7 @@ namespace EightBall.Editor
             GenerateCueBall();
             GenerateBalls();
             GenerateCueStick();
+            GenerateHudIcons();
 
             AssetDatabase.Refresh();
             ConfigureSprites();
@@ -177,6 +180,191 @@ namespace EightBall.Editor
 
             tex.Apply();
             SavePng(tex, "CueStick");
+        }
+
+        // ── HUD icons: white glyphs on transparent, used by GameplayUI ────────
+
+        private const int IconSize = 96;
+        private static readonly Color32 IconColor = new Color32(235, 235, 235, 255);
+
+        private static void GenerateHudIcons()
+        {
+            GenerateAimIcon();
+            GeneratePowerIcon();
+            GenerateLockIcon();
+            GenerateShootIcon();
+        }
+
+        // Aim: crosshair — ring, four tick marks, centre dot
+        private static void GenerateAimIcon()
+        {
+            var tex = CreateIconTexture();
+            int c = IconSize / 2;
+
+            DrawRing(tex, c, c, 26, 6, IconColor);
+
+            int tickOuter = 42, tickInner = 32;
+            DrawSegment(tex, new Vector2(c, c - tickOuter), new Vector2(c, c - tickInner), 6, IconColor);
+            DrawSegment(tex, new Vector2(c, c + tickOuter), new Vector2(c, c + tickInner), 6, IconColor);
+            DrawSegment(tex, new Vector2(c - tickOuter, c), new Vector2(c - tickInner, c), 6, IconColor);
+            DrawSegment(tex, new Vector2(c + tickOuter, c), new Vector2(c + tickInner, c), 6, IconColor);
+
+            DrawFilledCircle(tex, c, c, 7, IconColor);
+            tex.Apply();
+            SavePng(tex, "Icon_Aim");
+        }
+
+        // Power: lightning bolt
+        private static void GeneratePowerIcon()
+        {
+            // Icon coordinates are Unity texture space: y up, origin bottom-left
+            var tex = CreateIconTexture();
+            FillPolygon(tex, new[]
+            {
+                new Vector2(58, 88),
+                new Vector2(24, 54),
+                new Vector2(44, 52),
+                new Vector2(36, 8),
+                new Vector2(74, 42),
+                new Vector2(52, 42),
+            }, IconColor);
+            tex.Apply();
+            SavePng(tex, "Icon_Power");
+        }
+
+        // Lock: padlock — shackle ring over a rounded body
+        private static void GenerateLockIcon()
+        {
+            var tex = CreateIconTexture();
+
+            // Shackle: ring centred on the body top; the body drawn after hides its lower half
+            DrawRing(tex, 48, 50, 16, 6, IconColor);
+
+            DrawRoundedRect(tex, 26, 12, 70, 52, 8, IconColor);
+            tex.Apply();
+            SavePng(tex, "Icon_Lock");
+        }
+
+        // Shoot: cue stick striking the cue ball, with impact sparks
+        private static void GenerateShootIcon()
+        {
+            var tex = CreateIconTexture();
+
+            // Ball at lower right, cue comes in from the upper left
+            DrawFilledCircle(tex, 62, 54, 16, IconColor);
+            DrawSegment(tex, new Vector2(12, 8), new Vector2(50, 42), 9, IconColor);
+
+            // Sparks flying off the contact point, away from the ball
+            DrawSegment(tex, new Vector2(48, 34), new Vector2(40, 22), 5, IconColor);
+            DrawSegment(tex, new Vector2(40, 50), new Vector2(26, 46), 5, IconColor);
+            DrawSegment(tex, new Vector2(42, 64), new Vector2(32, 74), 5, IconColor);
+
+            tex.Apply();
+            SavePng(tex, "Icon_Shoot");
+        }
+
+        private static Texture2D CreateIconTexture()
+        {
+            var tex = new Texture2D(IconSize, IconSize, TextureFormat.RGBA32, false);
+            Fill(tex, Color.clear);
+            return tex;
+        }
+
+        // ── Icon drawing helpers ─────────────────────────────────────────────
+
+        private static void DrawRing(Texture2D tex, int cx, int cy, int radius, int thickness, Color color)
+        {
+            float inner = radius - thickness * 0.5f;
+            float outer = radius + thickness * 0.5f;
+            int reach = Mathf.CeilToInt(outer);
+
+            for (int y = cy - reach; y <= cy + reach; y++)
+            {
+                for (int x = cx - reach; x <= cx + reach; x++)
+                {
+                    if (x < 0 || x >= tex.width || y < 0 || y >= tex.height) continue;
+                    float d = Mathf.Sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy));
+                    if (d >= inner && d <= outer)
+                        tex.SetPixel(x, y, color);
+                }
+            }
+        }
+
+        private static void DrawSegment(Texture2D tex, Vector2 a, Vector2 b, float thickness, Color color)
+        {
+            int minX = Mathf.Max(0, Mathf.FloorToInt(Mathf.Min(a.x, b.x) - thickness));
+            int maxX = Mathf.Min(tex.width - 1, Mathf.CeilToInt(Mathf.Max(a.x, b.x) + thickness));
+            int minY = Mathf.Max(0, Mathf.FloorToInt(Mathf.Min(a.y, b.y) - thickness));
+            int maxY = Mathf.Min(tex.height - 1, Mathf.FloorToInt(Mathf.Max(a.y, b.y) + thickness));
+
+            for (int y = minY; y <= maxY; y++)
+            {
+                for (int x = minX; x <= maxX; x++)
+                {
+                    float d = DistanceToSegment(new Vector2(x + 0.5f, y + 0.5f), a, b);
+                    if (d <= thickness * 0.5f)
+                        tex.SetPixel(x, y, color);
+                }
+            }
+        }
+
+        private static float DistanceToSegment(Vector2 p, Vector2 a, Vector2 b)
+        {
+            Vector2 ab = b - a;
+            float t = Mathf.Clamp(Vector2.Dot(p - a, ab) / ab.sqrMagnitude, 0f, 1f);
+            return Vector2.Distance(p, a + t * ab);
+        }
+
+        private static void FillPolygon(Texture2D tex, Vector2[] points, Color color)
+        {
+            float minY = float.MaxValue, maxY = float.MinValue;
+            foreach (var p in points)
+            {
+                minY = Mathf.Min(minY, p.y);
+                maxY = Mathf.Max(maxY, p.y);
+            }
+
+            int y0 = Mathf.Max(0, Mathf.FloorToInt(minY));
+            int y1 = Mathf.Min(tex.height - 1, Mathf.CeilToInt(maxY));
+            for (int y = y0; y <= y1; y++)
+            {
+                float py = y + 0.5f;
+
+                // Even-odd scanline: collect edge crossings, fill between pairs
+                var crossings = new List<float>();
+                for (int i = 0; i < points.Length; i++)
+                {
+                    var a = points[i];
+                    var b = points[(i + 1) % points.Length];
+                    if ((a.y <= py && b.y > py) || (b.y <= py && a.y > py))
+                        crossings.Add(a.x + (py - a.y) / (b.y - a.y) * (b.x - a.x));
+                }
+                crossings.Sort();
+
+                for (int i = 0; i + 1 < crossings.Count; i += 2)
+                {
+                    int x0 = Mathf.Max(0, Mathf.CeilToInt(crossings[i]));
+                    int x1 = Mathf.Min(tex.width - 1, Mathf.FloorToInt(crossings[i + 1]));
+                    for (int x = x0; x <= x1; x++)
+                        tex.SetPixel(x, y, color);
+                }
+            }
+        }
+
+        private static void DrawRoundedRect(Texture2D tex, int x0, int y0, int x1, int y1, int radius, Color color)
+        {
+            for (int y = y0; y <= y1; y++)
+            {
+                for (int x = x0; x <= x1; x++)
+                {
+                    // In a corner box, keep only pixels within `radius` of the arc centre
+                    int cx = Mathf.Clamp(x, x0 + radius, x1 - radius);
+                    int cy = Mathf.Clamp(y, y0 + radius, y1 - radius);
+                    int dx = x - cx, dy = y - cy;
+                    if (dx * dx + dy * dy <= radius * radius)
+                        tex.SetPixel(x, y, color);
+                }
+            }
         }
 
         // ── Helpers ───────────────────────────────────────────────────────────
