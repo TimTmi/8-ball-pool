@@ -37,6 +37,9 @@ namespace EightBall.Gameplay
 
         private static readonly RaycastHit2D[] Hits = new RaycastHit2D[8];
 
+        /// <summary>Never varies: pockets are triggers and must not stop the line.</summary>
+        private static readonly ContactFilter2D CastFilter = new ContactFilter2D { useTriggers = false };
+
         /// <summary>Everything the prediction needs about the shot being lined up.</summary>
         public readonly struct Request
         {
@@ -95,7 +98,6 @@ namespace EightBall.Gameplay
             approachPath.Clear();
             cueAfterPath.Clear();
 
-            var filter = new ContactFilter2D { useTriggers = false }; // pockets must not stop the line
             Vector2 position = request.Origin;
             Vector2 velocity = request.Direction.normalized * request.Speed;
             Vector2 spin = request.Spin;
@@ -104,6 +106,11 @@ namespace EightBall.Gameplay
             // on a coarser clock walks the line up to a couple of ball radii past where the ball
             // really stops.
             float stepTime = Time.fixedDeltaTime;
+
+            // The ball we strike has to be ignored once we are past it: the walk resumes from a
+            // point touching it, so the next cast would hit it again at zero distance and cut the
+            // post-contact run off before it drew anything.
+            Collider2D struckCollider = null;
 
             var result = new Result(false, position, null, Vector2.zero);
             bool contacted = false;
@@ -118,7 +125,7 @@ namespace EightBall.Gameplay
                 float distance = speed * stepTime;
                 if (distance < MinimumStepDistance) break;
 
-                RaycastHit2D hit = CastAhead(position, velocity / speed, distance, filter, request.CueBallCollider);
+                RaycastHit2D hit = CastAhead(position, velocity / speed, distance, request.CueBallCollider, struckCollider);
                 if (hit.collider != null)
                 {
                     Ball struckBall = contacted ? null : hit.collider.GetComponent<Ball>();
@@ -142,6 +149,7 @@ namespace EightBall.Gameplay
                     AddVertex(approachPath, position, true);
                     cueAfterPath.Add(position);
                     contacted = true;
+                    struckCollider = hit.collider;
 
                     Vector2 lineOfCentres = (Vector2)struckBall.transform.position - position;
                     result = new Result(true, position, struckBall, lineOfCentres.normalized);
@@ -174,14 +182,15 @@ namespace EightBall.Gameplay
             return result;
         }
 
-        private static RaycastHit2D CastAhead(Vector2 origin, Vector2 direction, float distance, ContactFilter2D filter, Collider2D ignored)
+        private static RaycastHit2D CastAhead(Vector2 origin, Vector2 direction, float distance, Collider2D ignored, Collider2D alsoIgnored)
         {
-            int hitCount = Physics2D.CircleCast(origin, TableLayout.BallRadius * CastRadiusScale, direction, filter, Hits, distance);
+            int hitCount = Physics2D.CircleCast(origin, TableLayout.BallRadius * CastRadiusScale, direction, CastFilter, Hits, distance);
 
             RaycastHit2D nearest = default;
             for (int i = 0; i < hitCount; i++)
             {
-                if (Hits[i].collider == null || Hits[i].collider == ignored) continue;
+                Collider2D collider = Hits[i].collider;
+                if (collider == null || collider == ignored || collider == alsoIgnored) continue;
                 if (nearest.collider == null || Hits[i].distance < nearest.distance) nearest = Hits[i];
             }
             return nearest;
