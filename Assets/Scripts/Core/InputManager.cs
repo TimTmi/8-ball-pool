@@ -15,7 +15,7 @@ namespace EightBall.Core
         private TurnManager _turnManager;
 
         [Header("Power")]
-        [Tooltip("Max cue pull-back distance (world units). Pointer distance from the cue ball maps 1:1 to the cue pull and is clamped here; full power is reached at this distance.")]
+        [Tooltip("Max cue pull-back distance (world units). Power is 0 at the cancel zone edge and pointer distance beyond it maps 1:1 to the cue pull, clamped here; full power is reached at cancel radius + this distance.")]
         [SerializeField] private float _maxPullDistance = 2.5f;
 
         [Header("Shot")]
@@ -25,14 +25,14 @@ namespace EightBall.Core
         [Header("Cancel")]
         [Tooltip("Radius around the cue ball (world units) that cancels the current drag: while the pointer is inside, aim and power revert to their pre-drag values, and releasing here cancels the shot setup.")]
         [SerializeField] private float _cancelRadius = 0.6f;
+        [Tooltip("Margin (pixels) along the app's screen edges that cancels the current drag, same behaviour as the cue-ball cancel zone.")]
+        [SerializeField] private float _edgeCancelMargin = 48f;
 
         public float CurrentAimAngle { get; private set; }
         public float CurrentPower { get; private set; } // Normalized 0 to 1
 
         private Camera _camera;
         private bool _isDragging;
-        /// <summary>True once the player has aimed during the current turn; the cue only shows then.</summary>
-        private bool _hasAim;
         private PowerBar _powerBar;
         private AimLine _aimLine;
 
@@ -43,7 +43,6 @@ namespace EightBall.Core
         // drags into the cancel zone around the cue ball
         private float _dragStartAimAngle;
         private float _dragStartPower;
-        private bool _dragStartHasAim;
 
         /// <summary>Aiming is only allowed once every ball has come to rest.</summary>
         private bool CanAim => !_isStriking && (_cueController == null || _cueController.IsTableSettled);
@@ -116,7 +115,6 @@ namespace EightBall.Core
                     _isDragging = true;
                     _dragStartAimAngle = CurrentAimAngle;
                     _dragStartPower = CurrentPower;
-                    _dragStartHasAim = _hasAim;
                 }
             }
             else if (pointer.press.isPressed && _isDragging)
@@ -148,7 +146,7 @@ namespace EightBall.Core
                         // Show shoot button if we actually aimed/powered up
                         if (_uiController != null)
                         {
-                            _uiController.SetShootButtonActive(true);
+                            _uiController.SetShootButtonUnlocked(true);
                         }
                     }
                 }
@@ -156,6 +154,17 @@ namespace EightBall.Core
         }
 
         private bool IsPointerInCancelZone(Vector2 pointerPosition)
+        {
+            return IsPointerNearScreenEdge(pointerPosition) || IsPointerNearCueBall(pointerPosition);
+        }
+
+        private bool IsPointerNearScreenEdge(Vector2 pointerPosition)
+        {
+            return pointerPosition.x < _edgeCancelMargin || pointerPosition.x > Screen.width - _edgeCancelMargin
+                || pointerPosition.y < _edgeCancelMargin || pointerPosition.y > Screen.height - _edgeCancelMargin;
+        }
+
+        private bool IsPointerNearCueBall(Vector2 pointerPosition)
         {
             if (_tableSetup == null || _tableSetup.CueBall == null || _camera == null) return false;
 
@@ -170,7 +179,6 @@ namespace EightBall.Core
         {
             CurrentAimAngle = _dragStartAimAngle;
             CurrentPower = _dragStartPower;
-            _hasAim = _dragStartHasAim;
         }
 
         /// <summary>
@@ -188,15 +196,14 @@ namespace EightBall.Core
             Vector2 pointerWorld = _camera.ScreenToWorldPoint(screenPosition);
             Vector2 toBall = (Vector2)_tableSetup.CueBall.transform.position - pointerWorld;
 
-            // Pointer is in the cancel zone around the cue ball: revert to the pre-drag
-            // aim/power until it leaves the zone (which resumes aiming from scratch)
-            if (toBall.magnitude <= _cancelRadius)
+            // Pointer is in a cancel zone (around the cue ball or along the screen
+            // edges): revert to the pre-drag aim/power until it leaves the zone
+            // (which resumes aiming from scratch)
+            if (toBall.magnitude <= _cancelRadius || IsPointerNearScreenEdge(pointerPosition))
             {
                 RestorePreDragState();
                 return;
             }
-
-            _hasAim = true;
 
             if (!_uiController.IsAimLocked)
             {
@@ -205,9 +212,10 @@ namespace EightBall.Core
 
             if (!_uiController.IsPowerLocked)
             {
-                // Pointer distance pulls the cue back 1:1, capped at max pull
-                float pullDistance = Mathf.Min(toBall.magnitude, _maxPullDistance);
-                CurrentPower = pullDistance / _maxPullDistance;
+                // Power starts at the cancel zone edge and pulls the cue back 1:1
+                // from there, capped at max pull (full power = zone edge + max pull)
+                float pullDistance = Mathf.Min(toBall.magnitude - _cancelRadius, _maxPullDistance);
+                CurrentPower = Mathf.Max(0f, pullDistance) / _maxPullDistance;
             }
         }
 
@@ -220,8 +228,9 @@ namespace EightBall.Core
 
             GameObject cueStick = _tableSetup.CueStick;
 
-            // The cue is only on the table once the player has aimed during this turn
-            bool showCue = CanAim && _hasAim;
+            // The cue rests at the ball whenever the table is settled, at the current
+            // (default or last) angle with no pull-back until the player aims
+            bool showCue = CanAim;
             if (cueStick.activeSelf != showCue) cueStick.SetActive(showCue);
             if (!showCue) return;
 
@@ -261,8 +270,8 @@ namespace EightBall.Core
 
         private void UpdateAimLine()
         {
-            // The guide follows the cue: shown once the player has aimed, gone during the shot
-            bool showAimLine = CanAim && _hasAim;
+            // The guide follows the cue: shown whenever the cue is, gone during the shot
+            bool showAimLine = CanAim;
             if (!showAimLine)
             {
                 if (_aimLine != null) _aimLine.Hide();
@@ -279,12 +288,12 @@ namespace EightBall.Core
             var body = cueBall.GetComponent<Rigidbody2D>();
             Vector2 spin = _uiController != null ? _uiController.CurrentSpin : Vector2.zero;
 
-            // Same speed, spin and damping the shot will actually use, so the drawn path is the
-            // path the ball takes rather than a rough sketch of it
+            // The guide is an aiming aid, not a range readout: it runs the line at full shot
+            // speed so it always reaches the first contact, whatever power is set
             _aimLine.Show(new ShotPrediction.Request(
                 cueBall.transform.position,
                 direction,
-                _cueController.SpeedForPower(CurrentPower),
+                _cueController.SpeedForPower(1f),
                 spin,
                 body != null ? body.linearDamping : 0f,
                 cueBall.GetComponent<Collider2D>()));
@@ -298,8 +307,8 @@ namespace EightBall.Core
                 return;
             }
 
-            // Guard re-entry: the button is hidden during the stroke, but a queued click must not
-            // start a second one.
+            // Guard re-entry: the button disarms (red) during the stroke, but a queued click must
+            // not start a second one.
             if (_isStriking || !_cueController.IsTableSettled) return;
 
             StartCoroutine(StrikeAndShoot(CurrentAimAngle, CurrentPower));
@@ -321,13 +330,13 @@ namespace EightBall.Core
 
             if (!shotPlayed) yield break;
 
-            // Reset for next turn: no power and no cue until the player aims again
+            // Reset for next turn: no power carried over
             CurrentPower = 0f;
-            _hasAim = false;
             if (_uiController != null)
             {
-                _uiController.SetShootButtonActive(false);
+                _uiController.SetShootButtonUnlocked(false);
                 _uiController.UnlockAimAndPower();
+                _uiController.ResetSpin();
                 _uiController.SetInputHudVisible(false);
             }
         }

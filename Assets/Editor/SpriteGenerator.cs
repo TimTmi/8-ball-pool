@@ -26,6 +26,7 @@ namespace EightBall.Editor
             GenerateCueBall();
             GenerateBalls();
             GenerateCueStick();
+            GenerateHudIcons();
 
             AssetDatabase.Refresh();
             ConfigureSprites();
@@ -179,6 +180,168 @@ namespace EightBall.Editor
             SavePng(tex, "CueStick");
         }
 
+        // ── HUD icons: white glyphs on transparent, used by GameplayUI ────────
+
+        private const int IconSize = 96;
+        private static readonly Color32 IconColor = new Color32(235, 235, 235, 255);
+
+        private static void GenerateHudIcons()
+        {
+            GenerateAimIcon();
+            GeneratePowerIcon();
+            GenerateLockIcon();
+            GenerateShootIcon();
+        }
+
+        // Aim: crosshair — ring, four tick marks, centre dot
+        private static void GenerateAimIcon()
+        {
+            var tex = CreateIconTexture();
+            int c = IconSize / 2;
+
+            DrawRing(tex, c, c, 26, 6, IconColor);
+
+            int tickOuter = 42, tickInner = 32;
+            DrawSegment(tex, new Vector2(c, c - tickOuter), new Vector2(c, c - tickInner), 6, IconColor);
+            DrawSegment(tex, new Vector2(c, c + tickOuter), new Vector2(c, c + tickInner), 6, IconColor);
+            DrawSegment(tex, new Vector2(c - tickOuter, c), new Vector2(c - tickInner, c), 6, IconColor);
+            DrawSegment(tex, new Vector2(c + tickOuter, c), new Vector2(c + tickInner, c), 6, IconColor);
+
+            DrawFilledCircle(tex, c, c, 7, IconColor);
+            tex.Apply();
+            SavePng(tex, "Icon_Aim");
+        }
+
+        // Power: gauge — semicircular dial with a needle pointing up-right
+        private static void GeneratePowerIcon()
+        {
+            // Icon coordinates are Unity texture space: y up, origin bottom-left
+            var tex = CreateIconTexture();
+            int cx = 48, cy = 34;
+            float radius = 36, thickness = 8;
+
+            // Upper half of the dial ring
+            float inner = radius - thickness * 0.5f;
+            float outer = radius + thickness * 0.5f;
+            for (int y = cy; y <= cy + Mathf.CeilToInt(outer); y++)
+            {
+                for (int x = cx - Mathf.CeilToInt(outer); x <= cx + Mathf.CeilToInt(outer); x++)
+                {
+                    if (x < 0 || x >= tex.width || y < 0 || y >= tex.height) continue;
+                    float dx = x - cx, dy = y - cy;
+                    float d = Mathf.Sqrt(dx * dx + dy * dy);
+                    if (d >= inner && d <= outer)
+                        tex.SetPixel(x, y, IconColor);
+                }
+            }
+
+            // Needle reaching the dial at the upper right, hub on top of its base
+            DrawSegment(tex, new Vector2(cx, cy), new Vector2(cx + 26, cy + 26), 7, IconColor);
+            DrawFilledCircle(tex, cx, cy, 9, IconColor);
+
+            tex.Apply();
+            SavePng(tex, "Icon_Power");
+        }
+
+        // Lock: padlock — shackle ring over a rounded body
+        private static void GenerateLockIcon()
+        {
+            var tex = CreateIconTexture();
+
+            // Shackle: ring centred on the body top; the body drawn after hides its lower half
+            DrawRing(tex, 48, 50, 16, 6, IconColor);
+
+            DrawRoundedRect(tex, 26, 12, 70, 52, 8, IconColor);
+            tex.Apply();
+            SavePng(tex, "Icon_Lock");
+        }
+
+        // Shoot: cue stick striking the cue ball, with impact sparks
+        private static void GenerateShootIcon()
+        {
+            var tex = CreateIconTexture();
+
+            // Ball at lower right, cue comes in from the upper left
+            DrawFilledCircle(tex, 62, 54, 16, IconColor);
+            DrawSegment(tex, new Vector2(12, 8), new Vector2(50, 42), 9, IconColor);
+
+            // Sparks flying off the contact point, away from the ball
+            DrawSegment(tex, new Vector2(48, 34), new Vector2(40, 22), 5, IconColor);
+            DrawSegment(tex, new Vector2(40, 50), new Vector2(26, 46), 5, IconColor);
+            DrawSegment(tex, new Vector2(42, 64), new Vector2(32, 74), 5, IconColor);
+
+            tex.Apply();
+            SavePng(tex, "Icon_Shoot");
+        }
+
+        private static Texture2D CreateIconTexture()
+        {
+            var tex = new Texture2D(IconSize, IconSize, TextureFormat.RGBA32, false);
+            Fill(tex, Color.clear);
+            return tex;
+        }
+
+        // ── Icon drawing helpers ─────────────────────────────────────────────
+
+        private static void DrawRing(Texture2D tex, int cx, int cy, int radius, int thickness, Color color)
+        {
+            float inner = radius - thickness * 0.5f;
+            float outer = radius + thickness * 0.5f;
+            int reach = Mathf.CeilToInt(outer);
+
+            for (int y = cy - reach; y <= cy + reach; y++)
+            {
+                for (int x = cx - reach; x <= cx + reach; x++)
+                {
+                    if (x < 0 || x >= tex.width || y < 0 || y >= tex.height) continue;
+                    float d = Mathf.Sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy));
+                    if (d >= inner && d <= outer)
+                        tex.SetPixel(x, y, color);
+                }
+            }
+        }
+
+        private static void DrawSegment(Texture2D tex, Vector2 a, Vector2 b, float thickness, Color color)
+        {
+            int minX = Mathf.Max(0, Mathf.FloorToInt(Mathf.Min(a.x, b.x) - thickness));
+            int maxX = Mathf.Min(tex.width - 1, Mathf.CeilToInt(Mathf.Max(a.x, b.x) + thickness));
+            int minY = Mathf.Max(0, Mathf.FloorToInt(Mathf.Min(a.y, b.y) - thickness));
+            int maxY = Mathf.Min(tex.height - 1, Mathf.FloorToInt(Mathf.Max(a.y, b.y) + thickness));
+
+            for (int y = minY; y <= maxY; y++)
+            {
+                for (int x = minX; x <= maxX; x++)
+                {
+                    float d = DistanceToSegment(new Vector2(x + 0.5f, y + 0.5f), a, b);
+                    if (d <= thickness * 0.5f)
+                        tex.SetPixel(x, y, color);
+                }
+            }
+        }
+
+        private static float DistanceToSegment(Vector2 p, Vector2 a, Vector2 b)
+        {
+            Vector2 ab = b - a;
+            float t = Mathf.Clamp(Vector2.Dot(p - a, ab) / ab.sqrMagnitude, 0f, 1f);
+            return Vector2.Distance(p, a + t * ab);
+        }
+
+        private static void DrawRoundedRect(Texture2D tex, int x0, int y0, int x1, int y1, int radius, Color color)
+        {
+            for (int y = y0; y <= y1; y++)
+            {
+                for (int x = x0; x <= x1; x++)
+                {
+                    // In a corner box, keep only pixels within `radius` of the arc centre
+                    int cx = Mathf.Clamp(x, x0 + radius, x1 - radius);
+                    int cy = Mathf.Clamp(y, y0 + radius, y1 - radius);
+                    int dx = x - cx, dy = y - cy;
+                    if (dx * dx + dy * dy <= radius * radius)
+                        tex.SetPixel(x, y, color);
+                }
+            }
+        }
+
         // ── Helpers ───────────────────────────────────────────────────────────
 
         private static Texture2D CreateBallTexture(int size, Color32 baseColor, int number, bool isStripe)
@@ -192,7 +355,9 @@ namespace EightBall.Editor
 
             if (isStripe)
             {
-                int bandHalf = size / 5;
+                // Real stripe balls: white poles with a coloured equator band
+                // covering about half the ball diameter.
+                int bandHalf = Mathf.RoundToInt(r * 0.5f);
                 for (int x = 0; x < size; x++)
                 {
                     for (int y = cy - bandHalf; y <= cy + bandHalf; y++)
@@ -204,10 +369,10 @@ namespace EightBall.Editor
                 }
             }
 
-            // Highlight
-            DrawFilledCircle(tex, cx - r / 4, cy + r / 4, r / 5, new Color(1f, 1f, 1f, 0.55f));
-            // Center dot (white circle for number area)
-            DrawFilledCircle(tex, cx, cy, r / 5, new Color(1f, 1f, 1f, 0.9f));
+            // Number patch: small white circle, about one third of the ball
+            // diameter, as on real balls.
+            int numberRadius = Mathf.Max(3, r / 3);
+            DrawFilledCircle(tex, cx, cy, numberRadius, Color.white);
 
             tex.Apply();
             return tex;

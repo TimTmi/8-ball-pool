@@ -21,6 +21,9 @@ namespace EightBall.Gameplay
 
         private SpriteRenderer _fill;
 
+        private const int TickCount = 3;
+        private static readonly float[] TickFractions = { 0.25f, 0.5f, 0.75f };
+
         private static Sprite _whiteSprite;
 
         /// <summary>Solid 1x1 world-unit white sprite, built once from Unity's shared white texture.</summary>
@@ -48,6 +51,17 @@ namespace EightBall.Gameplay
             _fill = CreateChildRenderer("Fill");
             _fill.sortingOrder = 7;
             _fill.color = _fillColor;
+
+            // Tick marks at 25/50/75% so the player can gauge power without reading the fill.
+            for (int i = 0; i < TickCount; i++)
+            {
+                var tick = CreateChildRenderer($"Tick{i}");
+                tick.sortingOrder = 8;
+                tick.color = Color.white;
+                float x = -_width * 0.5f + _width * TickFractions[i];
+                tick.transform.localPosition = new Vector3(x, 0f, 0f);
+                tick.transform.localScale = new Vector3(0.02f, _height, 1f);
+            }
 
             Hide();
         }

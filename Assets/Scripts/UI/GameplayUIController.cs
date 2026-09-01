@@ -25,8 +25,9 @@ namespace EightBall.UI
         // ── UI element references ─────────────────────────────────────
 
         private Button _shootButton;
-        private Toggle _lockAimToggle;
-        private Toggle _lockPowerToggle;
+        private bool _isShootUnlocked;
+        private Button _lockAimButton;
+        private Button _lockPowerButton;
         private Label _turnLabel;
         private VisualElement _bottomBar;
 
@@ -50,6 +51,7 @@ namespace EightBall.UI
         // ── Half-size constants (pixels) for indicator placement ──────
         private const float ButtonDotHalf = 7f;   // half of 14px dot
         private const float HitDotHalf = 11f;     // half of 22px dot
+        private const string LockedClass = "hud-button--locked";
 
         // ── Lifecycle ─────────────────────────────────────────────────
 
@@ -62,7 +64,7 @@ namespace EightBall.UI
             if (_root == null) return;
 
             BindShootButton();
-            BindLockToggles();
+            BindLockButtons();
             BindSpinButton();
             BindSpinPanel();
             _turnLabel = _root.Q<Label>("player-turn-label");
@@ -74,6 +76,12 @@ namespace EightBall.UI
             if (_shootButton != null)
                 _shootButton.clicked -= OnShootClicked;
 
+            if (_lockAimButton != null)
+                _lockAimButton.clicked -= OnAimLockClicked;
+
+            if (_lockPowerButton != null)
+                _lockPowerButton.clicked -= OnPowerLockClicked;
+
             if (_spinButton != null)
                 _spinButton.UnregisterCallback<PointerDownEvent>(OnSpinButtonPressed);
 
@@ -82,7 +90,6 @@ namespace EightBall.UI
                 _spinBall.UnregisterCallback<PointerDownEvent>(OnHitPointPointerDown);
                 _spinBall.UnregisterCallback<PointerMoveEvent>(OnHitPointPointerMove);
                 _spinBall.UnregisterCallback<PointerUpEvent>(OnHitPointPointerUp);
-                _spinBall.UnregisterCallback<PointerLeaveEvent>(OnHitPointPointerUp);
                 _spinBall.UnregisterCallback<PointerCancelEvent>(OnHitPointPointerUp);
             }
 
@@ -102,7 +109,15 @@ namespace EightBall.UI
             if (_shootButton == null) return;
 
             _shootButton.clicked += OnShootClicked;
-            SetShootButtonActive(false);
+            SetShootButtonUnlocked(false);
+        }
+
+        /// <summary>Centres the spin so the next shot starts without carry-over english.</summary>
+        public void ResetSpin()
+        {
+            CurrentSpin = Vector2.zero;
+            RefreshHitDot();
+            RefreshButtonDot();
         }
 
         /// <summary>Unlock aim and power so the next turn starts with both free.</summary>
@@ -110,9 +125,7 @@ namespace EightBall.UI
         {
             IsAimLocked = false;
             IsPowerLocked = false;
-
-            if (_lockAimToggle != null) _lockAimToggle.SetValueWithoutNotify(false);
-            if (_lockPowerToggle != null) _lockPowerToggle.SetValueWithoutNotify(false);
+            RefreshLockButtons();
         }
 
         /// <summary>
@@ -129,7 +142,6 @@ namespace EightBall.UI
             if (!visible)
             {
                 SetPanelOpen(false);
-                SetShootButtonActive(false);
             }
         }
 
@@ -139,15 +151,41 @@ namespace EightBall.UI
             if (_turnLabel != null) _turnLabel.text = text;
         }
 
-        private void BindLockToggles()
+        private void BindLockButtons()
         {
-            _lockAimToggle = _root.Q<Toggle>("lock-aim-toggle");
-            if (_lockAimToggle != null)
-                _lockAimToggle.RegisterValueChangedCallback(evt => IsAimLocked = evt.newValue);
+            _lockAimButton = _root.Q<Button>("lock-aim-toggle");
+            if (_lockAimButton != null)
+                _lockAimButton.clicked += OnAimLockClicked;
 
-            _lockPowerToggle = _root.Q<Toggle>("lock-power-toggle");
-            if (_lockPowerToggle != null)
-                _lockPowerToggle.RegisterValueChangedCallback(evt => IsPowerLocked = evt.newValue);
+            _lockPowerButton = _root.Q<Button>("lock-power-toggle");
+            if (_lockPowerButton != null)
+                _lockPowerButton.clicked += OnPowerLockClicked;
+        }
+
+        private void OnAimLockClicked() => SetAimLocked(!IsAimLocked);
+
+        private void OnPowerLockClicked() => SetPowerLocked(!IsPowerLocked);
+
+        private void SetAimLocked(bool locked)
+        {
+            IsAimLocked = locked;
+            RefreshLockButtons();
+        }
+
+        private void SetPowerLocked(bool locked)
+        {
+            IsPowerLocked = locked;
+            RefreshLockButtons();
+        }
+
+        /// <summary>Shows the padlock badge and accent while a lock button is engaged.</summary>
+        private void RefreshLockButtons()
+        {
+            if (_lockAimButton != null)
+                _lockAimButton.EnableInClassList(LockedClass, IsAimLocked);
+
+            if (_lockPowerButton != null)
+                _lockPowerButton.EnableInClassList(LockedClass, IsPowerLocked);
         }
 
         private void BindSpinButton()
@@ -174,13 +212,13 @@ namespace EightBall.UI
             _spinBall.RegisterCallback<PointerDownEvent>(OnHitPointPointerDown);
             _spinBall.RegisterCallback<PointerMoveEvent>(OnHitPointPointerMove);
             _spinBall.RegisterCallback<PointerUpEvent>(OnHitPointPointerUp);
-            _spinBall.RegisterCallback<PointerLeaveEvent>(OnHitPointPointerUp);
             _spinBall.RegisterCallback<PointerCancelEvent>(OnHitPointPointerUp);
 
             // Delay initial hit-dot placement until layout is resolved
             _spinBall.RegisterCallback<GeometryChangedEvent>(_ => RefreshHitDot());
 
-            // Close panel when clicking anywhere outside it, and track which presses the HUD owns
+            // Track which presses the HUD owns, and close the panel if a pointer
+            // lands outside it (e.g. a second finger while a spin gesture is active)
             _root.RegisterCallback<PointerDownEvent>(OnRootPointerDown, TrickleDown.TrickleDown);
             _root.RegisterCallback<PointerUpEvent>(OnRootPointerReleased, TrickleDown.TrickleDown);
             _root.RegisterCallback<PointerCancelEvent>(OnRootPointerReleased, TrickleDown.TrickleDown);
@@ -188,9 +226,14 @@ namespace EightBall.UI
 
         // ── Compact spin button ───────────────────────────────────────
 
+        /// <summary>
+        /// Opening the panel is its own tap: press shows the panel and the release
+        /// ends that gesture without touching spin. The next press-drag-release on
+        /// the ball sets the spin and closes the panel (<see cref="OnHitPointPointerUp"/>).
+        /// </summary>
         private void OnSpinButtonPressed(PointerDownEvent evt)
         {
-            SetPanelOpen(!_panelOpen);
+            SetPanelOpen(true);
         }
 
         // ── Expanded panel open/close ─────────────────────────────────
@@ -208,8 +251,8 @@ namespace EightBall.UI
         }
 
         /// <summary>
-        /// Root-level press handler: closes the panel on a tap outside it and marks
-        /// presses the HUD owns so InputManager ignores them for aim/power.
+        /// Root-level press handler: marks presses the HUD owns so InputManager ignores
+        /// them for aim/power, and closes the panel when a press lands outside it.
         /// </summary>
         private void OnRootPointerDown(PointerDownEvent evt)
         {
@@ -236,7 +279,7 @@ namespace EightBall.UI
         {
             while (target != null)
             {
-                if (target == _shootButton || target == _lockAimToggle || target == _lockPowerToggle
+                if (target == _shootButton || target == _lockAimButton || target == _lockPowerButton
                     || target == _spinButton || target == _spinPanel)
                 {
                     return true;
@@ -266,12 +309,14 @@ namespace EightBall.UI
             if (!_isDraggingHitPoint) return;
             _isDraggingHitPoint = false;
 
+            // The pointer is captured, so Up/Cancel arrive here even off the element
             if (evt is PointerUpEvent pointerUp)
                 _spinBall.ReleasePointer(pointerUp.pointerId);
-            else if (evt is PointerLeaveEvent pointerLeave)
-                _spinBall.ReleasePointer(pointerLeave.pointerId);
             else if (evt is PointerCancelEvent pointerCancel)
                 _spinBall.ReleasePointer(pointerCancel.pointerId);
+
+            // The spin gesture ends with the finger lift, so the panel closes with it
+            SetPanelOpen(false);
         }
 
         private void UpdateSpinFromLocalPosition(Vector2 localPos)
@@ -297,47 +342,53 @@ namespace EightBall.UI
         /// <summary>Position the small dot on the compact button to mirror CurrentSpin.</summary>
         private void RefreshButtonDot()
         {
-            if (_spinButton == null || _spinButtonDot == null) return;
-
-            float w = _spinButton.resolvedStyle.width;
-            float h = _spinButton.resolvedStyle.height;
-            if (w == 0f || h == 0f) return;
-
-            float xPos = (CurrentSpin.x + 1f) * 0.5f * w;
-            float yPos = (1f - CurrentSpin.y) * 0.5f * h;
-
-            _spinButtonDot.style.left = xPos - ButtonDotHalf;
-            _spinButtonDot.style.top  = yPos - ButtonDotHalf;
+            PlaceSpinDot(_spinButton, _spinButtonDot, ButtonDotHalf);
         }
 
         /// <summary>Position the large hit-dot on the expanded ball to mirror CurrentSpin.</summary>
         private void RefreshHitDot()
         {
-            if (_spinBall == null || _spinHitDot == null) return;
+            PlaceSpinDot(_spinBall, _spinHitDot, HitDotHalf);
+        }
 
-            float w = _spinBall.resolvedStyle.width;
-            float h = _spinBall.resolvedStyle.height;
-            if (w == 0f || h == 0f) return;
+        /// <summary>
+        /// Place a spin indicator dot inside its ball, mirroring CurrentSpin.
+        /// Absolute children are positioned relative to the parent's padding box, so the
+        /// border must be subtracted from the resolved size (box-sizing is border-box).
+        /// </summary>
+        private void PlaceSpinDot(VisualElement ball, VisualElement dot, float dotHalf)
+        {
+            if (ball == null || dot == null) return;
+
+            var style = ball.resolvedStyle;
+            float w = ball.resolvedStyle.width - style.borderLeftWidth - style.borderRightWidth;
+            float h = ball.resolvedStyle.height - style.borderTopWidth - style.borderBottomWidth;
+            if (w <= 0f || h <= 0f) return;
 
             float xPos = (CurrentSpin.x + 1f) * 0.5f * w;
             float yPos = (1f - CurrentSpin.y) * 0.5f * h;
 
-            _spinHitDot.style.left = xPos - HitDotHalf;
-            _spinHitDot.style.top  = yPos - HitDotHalf;
+            dot.style.left = xPos - dotHalf;
+            dot.style.top  = yPos - dotHalf;
         }
 
         // ── Shoot button ──────────────────────────────────────────────
 
-        public void SetShootButtonActive(bool isActive)
+        /// <summary>Arms the shoot button (green). While unarmed it shows red and ignores clicks.</summary>
+        public void SetShootButtonUnlocked(bool isUnlocked)
         {
+            _isShootUnlocked = isUnlocked;
+
             if (_shootButton != null)
-                _shootButton.style.display = isActive ? DisplayStyle.Flex : DisplayStyle.None;
+                _shootButton.EnableInClassList(LockedClass, !isUnlocked);
         }
 
         private void OnShootClicked()
         {
+            if (!_isShootUnlocked) return;
+
             OnShootEvent?.Invoke();
-            SetShootButtonActive(false);
+            SetShootButtonUnlocked(false);
         }
     }
 }

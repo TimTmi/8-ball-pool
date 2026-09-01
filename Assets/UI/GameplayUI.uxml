@@ -19,11 +19,17 @@
 
         <ui:VisualElement name="bottom-bar" class="bottom-bar">
             <ui:VisualElement class="lock-toggles">
-                <ui:Toggle name="lock-aim-toggle" label="Lock Aim" />
-                <ui:Toggle name="lock-power-toggle" label="Lock Power" />
+                <ui:Button name="lock-aim-toggle" class="hud-button lock-button--aim">
+                    <ui:VisualElement class="lock-badge" />
+                </ui:Button>
+                <ui:Button name="lock-power-toggle" class="hud-button lock-button--power">
+                    <ui:VisualElement class="lock-badge" />
+                </ui:Button>
             </ui:VisualElement>
 
-            <ui:Button name="shoot-button" text="SHOOT" class="shoot-button" />
+            <ui:Button name="shoot-button" class="hud-button shoot-button">
+                <ui:VisualElement class="lock-badge" />
+            </ui:Button>
         </ui:VisualElement>
     </ui:VisualElement>
 

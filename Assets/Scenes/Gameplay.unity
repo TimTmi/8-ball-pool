@@ -573,8 +573,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b3c8f1a05d2e47b69c8d0e1f2a3b4c5d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EightBall.Gameplay.CueController
-  _minShotSpeed: 3
-  _maxShotSpeed: 26
+  _minShotSpeed: 1
+  _maxShotSpeed: 16
 --- !u!114 &2063585318
 MonoBehaviour:
   m_ObjectHideFlags: 0
