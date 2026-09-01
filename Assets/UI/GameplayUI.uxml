@@ -8,7 +8,10 @@
 
     <ui:VisualElement class="gameplay-container">
         <ui:VisualElement class="top-bar">
-            <ui:Label name="player-turn-label" text="Player 1's Turn" class="turn-label" />
+            <ui:VisualElement name="turn-indicator" class="turn-indicator turn-indicator--p1">
+                <ui:VisualElement name="turn-dot" class="turn-dot" />
+                <ui:Label name="player-turn-label" text="Player 1's Turn" class="turn-label" />
+            </ui:VisualElement>
 
             <!-- Compact cue ball button — always visible in top-right -->
             <ui:VisualElement name="spin-button" class="spin-button">
@@ -44,4 +47,7 @@
         </ui:VisualElement>
         <ui:Label class="spin-panel-label" text="Hit Point" />
     </ui:VisualElement>
+
+    <!-- Turn-change announcement — absolute overlay, hidden by default -->
+    <ui:Label name="turn-banner" text="Player 1's Turn" class="turn-banner turn-banner--hidden" />
 </ui:UXML>

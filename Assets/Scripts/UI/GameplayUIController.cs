@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -28,7 +29,9 @@ namespace EightBall.UI
         private bool _isShootUnlocked;
         private Button _lockAimButton;
         private Button _lockPowerButton;
+        private VisualElement _turnIndicator;
         private Label _turnLabel;
+        private Label _turnBanner;
         private VisualElement _bottomBar;
 
         // Compact cue ball button
@@ -47,11 +50,17 @@ namespace EightBall.UI
 
         private bool _panelOpen;
         private bool _isDraggingHitPoint;
+        private Coroutine _turnBannerRoutine;
 
         // ── Half-size constants (pixels) for indicator placement ──────
         private const float ButtonDotHalf = 7f;   // half of 14px dot
         private const float HitDotHalf = 11f;     // half of 22px dot
         private const string LockedClass = "hud-button--locked";
+        private const string TurnHiddenClass = "turn-banner--hidden";
+        private const string TurnFadingClass = "turn-banner--fading";
+        private const string PulseClass = "turn-indicator--pulse";
+        // How long the banner stays fully visible before dissolving (seconds)
+        private const float TurnBannerHoldDuration = 1.1f;
 
         // ── Lifecycle ─────────────────────────────────────────────────
 
@@ -67,7 +76,9 @@ namespace EightBall.UI
             BindLockButtons();
             BindSpinButton();
             BindSpinPanel();
+            _turnIndicator = _root.Q<VisualElement>("turn-indicator");
             _turnLabel = _root.Q<Label>("player-turn-label");
+            _turnBanner = _root.Q<Label>("turn-banner");
             _bottomBar = _root.Q<VisualElement>("bottom-bar");
         }
 
@@ -145,10 +156,51 @@ namespace EightBall.UI
             }
         }
 
-        /// <summary>Sets the top-bar label naming the player whose turn it is.</summary>
-        public void SetTurnLabelText(string text)
+        /// <summary>
+        /// Announces a turn change: recolours the top-bar pill for the new player, pulses
+        /// it, and flashes a centre-screen banner with the player's name that fades out.
+        /// </summary>
+        public void SetTurnPlayer(int playerIndex, string playerName)
         {
+            var text = $"{playerName}'s Turn";
+
             if (_turnLabel != null) _turnLabel.text = text;
+
+            if (_turnIndicator != null)
+            {
+                _turnIndicator.EnableInClassList("turn-indicator--p1", playerIndex == 0);
+                _turnIndicator.EnableInClassList("turn-indicator--p2", playerIndex == 1);
+
+                if (_turnBannerRoutine != null) StopCoroutine(_turnBannerRoutine);
+                _turnBannerRoutine = StartCoroutine(TurnChangeRoutine(playerIndex, text));
+            }
+        }
+
+        /// <summary>Pulses the turn pill and shows the banner, then dissolves it out.</summary>
+        private IEnumerator TurnChangeRoutine(int playerIndex, string text)
+        {
+            if (_turnBanner != null)
+            {
+                _turnBanner.text = text;
+                _turnBanner.EnableInClassList("turn-banner--p1", playerIndex == 0);
+                _turnBanner.EnableInClassList("turn-banner--p2", playerIndex == 1);
+                _turnBanner.RemoveFromClassList(TurnFadingClass);
+                _turnBanner.RemoveFromClassList(TurnHiddenClass);
+            }
+
+            _turnIndicator.AddToClassList(PulseClass);
+            yield return new WaitForSeconds(0.25f);
+            _turnIndicator.RemoveFromClassList(PulseClass);
+
+            yield return new WaitForSeconds(TurnBannerHoldDuration);
+
+            if (_turnBanner != null)
+            {
+                _turnBanner.AddToClassList(TurnFadingClass);
+                yield return new WaitForSeconds(0.4f);
+                _turnBanner.AddToClassList(TurnHiddenClass);
+                _turnBanner.RemoveFromClassList(TurnFadingClass);
+            }
         }
 
         private void BindLockButtons()

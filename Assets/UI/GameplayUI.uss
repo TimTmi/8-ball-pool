@@ -12,10 +12,85 @@
     padding: 20px;
 }
 
+/* Turn pill — dark capsule with a player-coloured dot and border.
+   GameplayUIController toggles turn-indicator--p1/p2 and pulses --pulse on turn change. */
+.turn-indicator {
+    flex-direction: row;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 32px;
+    border-width: 3px;
+    padding: 10px 20px;
+    transition-property: scale, border-color;
+    transition-duration: 0.15s;
+}
+
+.turn-indicator--p1 {
+    border-color: rgb(245, 195, 65);
+}
+
+.turn-indicator--p2 {
+    border-color: rgb(95, 170, 255);
+}
+
+.turn-indicator--pulse {
+    scale: 1.08 1.08;
+}
+
+.turn-dot {
+    width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    margin-right: 12px;
+}
+
+.turn-indicator--p1 .turn-dot {
+    background-color: rgb(245, 195, 65);
+}
+
+.turn-indicator--p2 .turn-dot {
+    background-color: rgb(95, 170, 255);
+}
+
 .turn-label {
-    font-size: 30px;
+    font-size: 26px;
     -unity-font-style: bold;
     color: white;
+}
+
+/* ── Turn-change banner (absolute overlay) ───────────────────── */
+
+.turn-banner {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 36%;
+    -unity-text-align: middle-center;
+    font-size: 56px;
+    -unity-font-style: bold;
+    color: white;
+    -unity-text-outline-width: 3px;
+    -unity-text-outline-color: rgba(0, 0, 0, 0.55);
+    transition-property: opacity, scale;
+    transition-duration: 0.35s;
+}
+
+.turn-banner--hidden {
+    display: none;
+}
+
+/* Set when the banner should start dissolving out */
+.turn-banner--fading {
+    opacity: 0;
+    scale: 1.15 1.15;
+}
+
+.turn-banner--p1 {
+    color: rgb(245, 195, 65);
+}
+
+.turn-banner--p2 {
+    color: rgb(95, 170, 255);
 }
 
 /* ── Compact spin button (always-visible cue ball) ──────────── */

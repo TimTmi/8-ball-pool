@@ -374,7 +374,7 @@ namespace EightBall.Core
             if (_uiController != null && _turnManager != null)
             {
                 _uiController.SetInputHudVisible(true);
-                _uiController.SetTurnLabelText($"{_turnManager.CurrentPlayerName}'s Turn");
+                _uiController.SetTurnPlayer(playerIndex, _turnManager.CurrentPlayerName);
             }
         }
     }
