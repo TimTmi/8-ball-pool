@@ -1,7 +1,5 @@
-using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
-using UnityEngine;
 using UnityEngine;
 
 namespace EightBall.Editor
@@ -214,20 +212,33 @@ namespace EightBall.Editor
             SavePng(tex, "Icon_Aim");
         }
 
-        // Power: lightning bolt
+        // Power: gauge — semicircular dial with a needle pointing up-right
         private static void GeneratePowerIcon()
         {
             // Icon coordinates are Unity texture space: y up, origin bottom-left
             var tex = CreateIconTexture();
-            FillPolygon(tex, new[]
+            int cx = 48, cy = 34;
+            float radius = 36, thickness = 8;
+
+            // Upper half of the dial ring
+            float inner = radius - thickness * 0.5f;
+            float outer = radius + thickness * 0.5f;
+            for (int y = cy; y <= cy + Mathf.CeilToInt(outer); y++)
             {
-                new Vector2(58, 88),
-                new Vector2(24, 54),
-                new Vector2(44, 52),
-                new Vector2(36, 8),
-                new Vector2(74, 42),
-                new Vector2(52, 42),
-            }, IconColor);
+                for (int x = cx - Mathf.CeilToInt(outer); x <= cx + Mathf.CeilToInt(outer); x++)
+                {
+                    if (x < 0 || x >= tex.width || y < 0 || y >= tex.height) continue;
+                    float dx = x - cx, dy = y - cy;
+                    float d = Mathf.Sqrt(dx * dx + dy * dy);
+                    if (d >= inner && d <= outer)
+                        tex.SetPixel(x, y, IconColor);
+                }
+            }
+
+            // Needle reaching the dial at the upper right, hub on top of its base
+            DrawSegment(tex, new Vector2(cx, cy), new Vector2(cx + 26, cy + 26), 7, IconColor);
+            DrawFilledCircle(tex, cx, cy, 9, IconColor);
+
             tex.Apply();
             SavePng(tex, "Icon_Power");
         }
@@ -313,42 +324,6 @@ namespace EightBall.Editor
             Vector2 ab = b - a;
             float t = Mathf.Clamp(Vector2.Dot(p - a, ab) / ab.sqrMagnitude, 0f, 1f);
             return Vector2.Distance(p, a + t * ab);
-        }
-
-        private static void FillPolygon(Texture2D tex, Vector2[] points, Color color)
-        {
-            float minY = float.MaxValue, maxY = float.MinValue;
-            foreach (var p in points)
-            {
-                minY = Mathf.Min(minY, p.y);
-                maxY = Mathf.Max(maxY, p.y);
-            }
-
-            int y0 = Mathf.Max(0, Mathf.FloorToInt(minY));
-            int y1 = Mathf.Min(tex.height - 1, Mathf.CeilToInt(maxY));
-            for (int y = y0; y <= y1; y++)
-            {
-                float py = y + 0.5f;
-
-                // Even-odd scanline: collect edge crossings, fill between pairs
-                var crossings = new List<float>();
-                for (int i = 0; i < points.Length; i++)
-                {
-                    var a = points[i];
-                    var b = points[(i + 1) % points.Length];
-                    if ((a.y <= py && b.y > py) || (b.y <= py && a.y > py))
-                        crossings.Add(a.x + (py - a.y) / (b.y - a.y) * (b.x - a.x));
-                }
-                crossings.Sort();
-
-                for (int i = 0; i + 1 < crossings.Count; i += 2)
-                {
-                    int x0 = Mathf.Max(0, Mathf.CeilToInt(crossings[i]));
-                    int x1 = Mathf.Min(tex.width - 1, Mathf.FloorToInt(crossings[i + 1]));
-                    for (int x = x0; x <= x1; x++)
-                        tex.SetPixel(x, y, color);
-                }
-            }
         }
 
         private static void DrawRoundedRect(Texture2D tex, int x0, int y0, int x1, int y1, int radius, Color color)
