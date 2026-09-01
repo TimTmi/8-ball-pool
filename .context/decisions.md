@@ -49,3 +49,8 @@
 **Context**: The line needs to render with no art in the repository, and the table has just been rescaled once already (ball 0.5u -> 0.2u).
 **Decision**: `AimLine` pools small `SpriteRenderer` dots sharing one runtime-generated soft-edged disc, following `PowerBar`'s approach, and its spacing/size defaults derive from `TableLayout.BallDiameter` rather than being absolute.
 **Rationale**: Sidesteps `LineRenderer` material and sorting questions under URP 2D, and matches the convention pocket sizes already follow, so the guide rescales with the table instead of silently becoming wrong the next time ball size moves.
+
+## [2026-09-01] The Guide Outline Is Baked Into the Sprite, Not a Second Renderer
+**Context**: The aim dots needed a thin outline to stay readable against the felt, and the same discs are drawn in three different colours.
+**Decision**: `AimLine.CreateDiscSprite` bakes the rim as black pixels and leaves the middle white. `SpriteRenderer.color` multiplies, so the tint reaches only the fill — black stays black at any colour — and one sprite serves every dot. Rim thickness is passed per disc (`RimFraction`) so the dot and the much larger ghost ball come out the same thickness in world units, not the same fraction.
+**Rationale**: The alternative, a second darker renderer behind each dot, would double an already pooled renderer count for a sub-pixel effect. Matching world thickness rather than relative thickness is what makes an outline read as a consistent stroke weight instead of growing with whatever it wraps.

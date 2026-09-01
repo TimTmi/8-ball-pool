@@ -16,6 +16,9 @@ namespace EightBall.Gameplay
 
         [SerializeField] private float _dotSize = TableLayout.BallDiameter * 0.22f;
 
+        [Tooltip("Outline thickness in world units, matched on dots and ghost however they are scaled.")]
+        [SerializeField] private float _outlineWidth = TableLayout.BallDiameter * 0.03f;
+
         [Tooltip("How far the struck-ball direction line runs (world units).")]
         [SerializeField] private float _struckBallLineLength = TableLayout.BallDiameter * 4f;
 
@@ -30,21 +33,17 @@ namespace EightBall.Gameplay
         private readonly List<SpriteRenderer> _dots = new List<SpriteRenderer>(MaxDots);
         private SpriteRenderer _ghostBall;
 
-        private static Sprite _circleSprite;
-
-        /// <summary>A soft-edged white disc, 1 world unit across. Built once, shared by every dot.</summary>
-        private static Sprite CircleSprite
-        {
-            get
-            {
-                if (_circleSprite == null) _circleSprite = CreateCircleSprite();
-                return _circleSprite;
-            }
-        }
+        // Two discs rather than one shared sprite: the ghost ball is several times a dot wide, so
+        // it needs a proportionally thinner rim to end up the same thickness on the table.
+        private Sprite _dotSprite;
+        private Sprite _ghostSprite;
 
         private void Awake()
         {
-            _ghostBall = CreateRenderer("GhostBall", 3);
+            _dotSprite = CreateDiscSprite(RimFraction(_dotSize));
+            _ghostSprite = CreateDiscSprite(RimFraction(TableLayout.BallDiameter));
+
+            _ghostBall = CreateRenderer("GhostBall", 3, _ghostSprite);
             _ghostBall.color = _ghostColor;
             _ghostBall.transform.localScale = new Vector3(TableLayout.BallDiameter, TableLayout.BallDiameter, 1f);
 
@@ -115,7 +114,7 @@ namespace EightBall.Gameplay
         {
             while (_dots.Count <= index)
             {
-                SpriteRenderer dot = CreateRenderer($"Dot_{_dots.Count:00}", 4);
+                SpriteRenderer dot = CreateRenderer($"Dot_{_dots.Count:00}", 4, _dotSprite);
                 dot.transform.localScale = new Vector3(_dotSize, _dotSize, 1f);
                 _dots.Add(dot);
             }
@@ -123,7 +122,7 @@ namespace EightBall.Gameplay
             return _dots[index];
         }
 
-        private SpriteRenderer CreateRenderer(string childName, int sortingOrder)
+        private SpriteRenderer CreateRenderer(string childName, int sortingOrder, Sprite sprite)
         {
             var child = transform.Find(childName);
             if (child == null)
@@ -135,33 +134,56 @@ namespace EightBall.Gameplay
             var sr = child.GetComponent<SpriteRenderer>();
             if (sr == null) sr = child.gameObject.AddComponent<SpriteRenderer>();
 
-            sr.sprite = CircleSprite;
+            sr.sprite = sprite;
             sr.sortingOrder = sortingOrder; // above the balls (0), below the cue stick (5)
             return sr;
         }
 
-        private static Sprite CreateCircleSprite()
+        /// <summary>Rim thickness as a fraction of the sprite's radius for a disc drawn at
+        /// <paramref name="worldDiameter"/>, so every disc ends up the same thickness on the table.</summary>
+        private float RimFraction(float worldDiameter)
+        {
+            if (worldDiameter <= 0f) return 0f;
+            return Mathf.Clamp01(_outlineWidth / (worldDiameter * 0.5f));
+        }
+
+        /// <summary>
+        /// A soft-edged disc, 1 world unit across, with a rim <paramref name="rimFraction"/> of the
+        /// radius thick. The rim is baked black while the middle is left white, so the renderer's
+        /// colour tints only the fill — multiplying by black leaves the outline black whatever
+        /// colour the dot is given.
+        /// </summary>
+        private static Sprite CreateDiscSprite(float rimFraction)
         {
             const int size = 64;
-            var texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            // Mip chain on: a dot is a tenth of the texture on screen, and minifying that far
+            // without mips makes the line sparkle as it sweeps.
+            var texture = new Texture2D(size, size, TextureFormat.RGBA32, true);
             var pixels = new Color32[size * size];
 
             float radius = size * 0.5f;
+            float innerRadius = radius * (1f - Mathf.Clamp01(rimFraction));
             var centre = new Vector2(radius, radius);
 
             for (int y = 0; y < size; y++)
             {
                 for (int x = 0; x < size; x++)
                 {
-                    // One pixel of feather at the rim, so small dots do not look ragged
-                    float edgeDistance = radius - Vector2.Distance(new Vector2(x + 0.5f, y + 0.5f), centre);
-                    var alpha = (byte)(Mathf.Clamp01(edgeDistance) * 255f);
-                    pixels[y * size + x] = new Color32(255, 255, 255, alpha);
+                    float distance = Vector2.Distance(new Vector2(x + 0.5f, y + 0.5f), centre);
+
+                    // One pixel of feather at the outer edge, so small dots do not look ragged
+                    var alpha = (byte)(Mathf.Clamp01(radius - distance) * 255f);
+
+                    // and one more crossing into the rim, so the outline does not stair-step
+                    float rim = Mathf.Clamp01(distance - innerRadius);
+                    var fill = (byte)((1f - rim) * 255f);
+
+                    pixels[y * size + x] = new Color32(fill, fill, fill, alpha);
                 }
             }
 
             texture.SetPixels32(pixels);
-            texture.Apply();
+            texture.Apply(true);
 
             return Sprite.Create(texture, new Rect(0f, 0f, size, size), new Vector2(0.5f, 0.5f), size);
         }
