@@ -328,6 +328,7 @@ namespace EightBall.Core
             {
                 _uiController.SetShootButtonActive(false);
                 _uiController.UnlockAimAndPower();
+                _uiController.ResetSpin();
                 _uiController.SetInputHudVisible(false);
             }
         }

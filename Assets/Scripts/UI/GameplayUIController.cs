@@ -105,6 +105,14 @@ namespace EightBall.UI
             SetShootButtonActive(false);
         }
 
+        /// <summary>Centres the spin so the next shot starts without carry-over english.</summary>
+        public void ResetSpin()
+        {
+            CurrentSpin = Vector2.zero;
+            RefreshHitDot();
+            RefreshButtonDot();
+        }
+
         /// <summary>Unlock aim and power so the next turn starts with both free.</summary>
         public void UnlockAimAndPower()
         {
