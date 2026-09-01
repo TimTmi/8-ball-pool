@@ -25,6 +25,7 @@ namespace EightBall.UI
         // ── UI element references ─────────────────────────────────────
 
         private Button _shootButton;
+        private bool _isShootUnlocked;
         private Button _lockAimButton;
         private Button _lockPowerButton;
         private Label _turnLabel;
@@ -50,7 +51,7 @@ namespace EightBall.UI
         // ── Half-size constants (pixels) for indicator placement ──────
         private const float ButtonDotHalf = 7f;   // half of 14px dot
         private const float HitDotHalf = 11f;     // half of 22px dot
-        private const string LockedClass = "lock-button--locked";
+        private const string LockedClass = "hud-button--locked";
 
         // ── Lifecycle ─────────────────────────────────────────────────
 
@@ -108,7 +109,7 @@ namespace EightBall.UI
             if (_shootButton == null) return;
 
             _shootButton.clicked += OnShootClicked;
-            SetShootButtonActive(false);
+            SetShootButtonUnlocked(false);
         }
 
         /// <summary>Centres the spin so the next shot starts without carry-over english.</summary>
@@ -141,7 +142,6 @@ namespace EightBall.UI
             if (!visible)
             {
                 SetPanelOpen(false);
-                SetShootButtonActive(false);
             }
         }
 
@@ -374,16 +374,21 @@ namespace EightBall.UI
 
         // ── Shoot button ──────────────────────────────────────────────
 
-        public void SetShootButtonActive(bool isActive)
+        /// <summary>Arms the shoot button (green). While unarmed it shows red and ignores clicks.</summary>
+        public void SetShootButtonUnlocked(bool isUnlocked)
         {
+            _isShootUnlocked = isUnlocked;
+
             if (_shootButton != null)
-                _shootButton.style.display = isActive ? DisplayStyle.Flex : DisplayStyle.None;
+                _shootButton.EnableInClassList(LockedClass, !isUnlocked);
         }
 
         private void OnShootClicked()
         {
+            if (!_isShootUnlocked) return;
+
             OnShootEvent?.Invoke();
-            SetShootButtonActive(false);
+            SetShootButtonUnlocked(false);
         }
     }
 }

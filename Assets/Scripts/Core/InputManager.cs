@@ -144,7 +144,7 @@ namespace EightBall.Core
                         // Show shoot button if we actually aimed/powered up
                         if (_uiController != null)
                         {
-                            _uiController.SetShootButtonActive(true);
+                            _uiController.SetShootButtonUnlocked(true);
                         }
                     }
                 }
@@ -293,8 +293,8 @@ namespace EightBall.Core
                 return;
             }
 
-            // Guard re-entry: the button is hidden during the stroke, but a queued click must not
-            // start a second one.
+            // Guard re-entry: the button disarms (red) during the stroke, but a queued click must
+            // not start a second one.
             if (_isStriking || !_cueController.IsTableSettled) return;
 
             StartCoroutine(StrikeAndShoot(CurrentAimAngle, CurrentPower));
@@ -320,7 +320,7 @@ namespace EightBall.Core
             CurrentPower = 0f;
             if (_uiController != null)
             {
-                _uiController.SetShootButtonActive(false);
+                _uiController.SetShootButtonUnlocked(false);
                 _uiController.UnlockAimAndPower();
                 _uiController.ResetSpin();
                 _uiController.SetInputHudVisible(false);

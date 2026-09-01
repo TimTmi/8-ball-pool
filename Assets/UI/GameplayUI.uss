@@ -122,34 +122,27 @@
     border-radius: 10px;
 }
 
-/* Icon lock buttons: aim/power icon fills the button; a padlock badge appears
-   on top while locked (locked class is toggled by GameplayUIController). */
-.lock-button {
+/* Icon HUD buttons (aim/power locks + shoot) share one style: transparent square
+   with a tinted glyph and border — green when unlocked, red plus a padlock badge
+   while locked. GameplayUIController toggles hud-button--locked. */
+.hud-button {
     width: 92px;
     height: 92px;
-    background-image: none;
+    background-color: rgba(0, 0, 0, 0);
     -unity-background-scale-mode: scale-to-fit;
-    -unity-background-image-tint-color: rgb(235, 235, 235);
+    -unity-background-image-tint-color: rgb(70, 200, 90);
     border-radius: 14px;
     border-width: 3px;
-    border-color: rgba(255, 255, 255, 0.25);
+    border-color: rgb(70, 200, 90);
     margin: 2px;
 }
 
-.lock-button--aim {
-    background-image: resource("Sprites/Icon_Aim");
-}
-
-.lock-button--power {
-    background-image: resource("Sprites/Icon_Power");
-}
-
-.lock-button:hover {
+.hud-button:hover {
     border-color: rgba(255, 255, 255, 0.6);
     scale: 1.06 1.06;
 }
 
-.lock-button--locked {
+.hud-button--locked {
     border-color: rgb(235, 70, 60);
     -unity-background-image-tint-color: rgb(235, 70, 60);
 }
@@ -165,20 +158,20 @@
     background-image: resource("Sprites/Icon_Lock");
 }
 
-.lock-button--locked .lock-badge {
+.hud-button--locked .lock-badge {
     display: flex;
 }
 
-.shoot-button {
-    width: 150px;
-    height: 80px;
-    background-image: resource("Sprites/Icon_Shoot");
-    -unity-background-scale-mode: scale-to-fit;
-    background-color: rgb(200, 50, 50);
-    border-radius: 40px;
+/* Per-button glyphs */
+.lock-button--aim {
+    background-image: resource("Sprites/Icon_Aim");
 }
 
-.shoot-button:hover {
-    background-color: rgb(255, 50, 50);
+.lock-button--power {
+    background-image: resource("Sprites/Icon_Power");
+}
+
+.shoot-button {
+    background-image: resource("Sprites/Icon_Shoot");
 }
 
