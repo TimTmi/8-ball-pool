@@ -23,12 +23,12 @@ namespace EightBall.Gameplay
         [SerializeField] private float _struckBallLineLength = TableLayout.BallDiameter * 4f;
 
         [Header("Colors")]
-        [SerializeField] private Color _pathColor = new Color(1f, 1f, 1f, 0.55f);
+        [SerializeField] private Color _pathColor = new Color(1f, 1f, 1f, 1f);
         [SerializeField] private Color _ghostColor = new Color(1f, 1f, 1f, 0.25f);
-        [SerializeField] private Color _struckBallColor = new Color(1f, 0.82f, 0.25f, 0.8f);
+        [SerializeField] private Color _struckBallColor = new Color(1f, 0.82f, 0.25f, 1f);
 
         [Tooltip("Where the cue ball goes after contact — the top/back spin readout.")]
-        [SerializeField] private Color _cueAfterColor = new Color(0.45f, 0.85f, 1f, 0.8f);
+        [SerializeField] private Color _cueAfterColor = new Color(0.45f, 0.85f, 1f, 1f);
 
         /// <summary>Enough for the longest path across the table plus the struck-ball line.</summary>
         private const int MaxDots = 96;
