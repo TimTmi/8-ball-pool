@@ -305,33 +305,34 @@ namespace EightBall.UI
         /// <summary>Position the small dot on the compact button to mirror CurrentSpin.</summary>
         private void RefreshButtonDot()
         {
-            if (_spinButton == null || _spinButtonDot == null) return;
-
-            float w = _spinButton.resolvedStyle.width;
-            float h = _spinButton.resolvedStyle.height;
-            if (w == 0f || h == 0f) return;
-
-            float xPos = (CurrentSpin.x + 1f) * 0.5f * w;
-            float yPos = (1f - CurrentSpin.y) * 0.5f * h;
-
-            _spinButtonDot.style.left = xPos - ButtonDotHalf;
-            _spinButtonDot.style.top  = yPos - ButtonDotHalf;
+            PlaceSpinDot(_spinButton, _spinButtonDot, ButtonDotHalf);
         }
 
         /// <summary>Position the large hit-dot on the expanded ball to mirror CurrentSpin.</summary>
         private void RefreshHitDot()
         {
-            if (_spinBall == null || _spinHitDot == null) return;
+            PlaceSpinDot(_spinBall, _spinHitDot, HitDotHalf);
+        }
 
-            float w = _spinBall.resolvedStyle.width;
-            float h = _spinBall.resolvedStyle.height;
-            if (w == 0f || h == 0f) return;
+        /// <summary>
+        /// Place a spin indicator dot inside its ball, mirroring CurrentSpin.
+        /// Absolute children are positioned relative to the parent's padding box, so the
+        /// border must be subtracted from the resolved size (box-sizing is border-box).
+        /// </summary>
+        private void PlaceSpinDot(VisualElement ball, VisualElement dot, float dotHalf)
+        {
+            if (ball == null || dot == null) return;
+
+            var style = ball.resolvedStyle;
+            float w = ball.resolvedStyle.width - style.borderLeftWidth - style.borderRightWidth;
+            float h = ball.resolvedStyle.height - style.borderTopWidth - style.borderBottomWidth;
+            if (w <= 0f || h <= 0f) return;
 
             float xPos = (CurrentSpin.x + 1f) * 0.5f * w;
             float yPos = (1f - CurrentSpin.y) * 0.5f * h;
 
-            _spinHitDot.style.left = xPos - HitDotHalf;
-            _spinHitDot.style.top  = yPos - HitDotHalf;
+            dot.style.left = xPos - dotHalf;
+            dot.style.top  = yPos - dotHalf;
         }
 
         // ── Shoot button ──────────────────────────────────────────────
