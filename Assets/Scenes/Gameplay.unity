@@ -240,7 +240,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 4
+  orthographic size: 3
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
@@ -427,6 +427,7 @@ MonoBehaviour:
   _maxPullDistance: 2.5
   _strikeDuration: 0.07
   _cancelRadius: 0.6
+  _edgeCancelMargin: 48
 --- !u!4 &1973044489
 Transform:
   m_ObjectHideFlags: 0
@@ -590,7 +591,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EightBall.Gameplay.TurnManager
 --- !u!114 &2063585319
 MonoBehaviour:
@@ -602,20 +603,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 681d061ff1224a1bb1226a46ef409cfd, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EightBall.Gameplay.ShotRecorder
---- !u!114 &2063585323
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2063585313}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 835a2536846644f79e34a7d3a7123aa5, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::EightBall.Rules.RulesController
 --- !u!114 &2063585320
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -626,7 +615,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 85e5deb9672f42c0bc59f4bafa8f1300, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EightBall.Rules.GroupAssignmentRule
 --- !u!114 &2063585321
 MonoBehaviour:
@@ -638,7 +627,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d0f16f281f814458b24944c614af20ab, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EightBall.Rules.TurnContinuationRule
 --- !u!114 &2063585322
 MonoBehaviour:
@@ -650,8 +639,20 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 38aabaa10cc548f28fc1f52e68ba1ab6, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EightBall.Rules.EightBallWinRule
+--- !u!114 &2063585323
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2063585313}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 835a2536846644f79e34a7d3a7123aa5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EightBall.Rules.RulesController
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
