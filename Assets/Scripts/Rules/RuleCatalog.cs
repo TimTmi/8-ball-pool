@@ -6,9 +6,10 @@ namespace EightBall.Rules
     /// <summary>
     /// The rules the main menu's rules screen may toggle. Only rules with a safe "off"
     /// game belong here: <see cref="GroupAssignmentRule"/> (the table would stay open
-    /// forever, no win possible), <see cref="TurnContinuationRule"/> (turn flow stalls and
-    /// a scratched cue ball never returns) and <see cref="EightBallWinRule"/> (the match
-    /// could never end) are always active and are deliberately not listed.
+    /// forever, no win possible) and <see cref="EightBallWinRule"/> (the match could
+    /// never end) are always active and are deliberately not listed. Turning off
+    /// <see cref="TurnContinuationRule"/> falls back to alternating turns — the controller
+    /// defaults the next player to the opponent when no rule decides otherwise.
     /// </summary>
     public static class RuleCatalog
     {
@@ -32,6 +33,12 @@ namespace EightBall.Rules
         /// <summary>Every rule the rules screen shows a toggle for, in display order.</summary>
         public static readonly IReadOnlyList<Entry> Toggleable = new[]
         {
+            new Entry(
+                "turn-continuation",
+                "Keep turn on pot",
+                "Potting a ball of your own group (any ball while the table is open) lets you shoot again, and a scratch gives the opponent ball in hand. Without it, players strictly alternate turns and a scratched cue ball just returns to the head spot.",
+                typeof(TurnContinuationRule)
+            ),
             new Entry(
                 "respot-eight-on-break",
                 "Respot 8 on break",

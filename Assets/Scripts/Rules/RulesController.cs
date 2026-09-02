@@ -95,7 +95,12 @@ namespace EightBall.Rules
         {
             if (_state.IsGameOver) return;
 
-            var findings = new RuleFindings();
+            var findings = new RuleFindings
+            {
+                // Default is "pass the turn": with TurnContinuationRule disabled, no rule
+                // writes NextPlayerIndex and play strictly alternates. Potting rules override.
+                NextPlayerIndex = (shot.PlayerIndex + 1) % 2
+            };
             foreach (IShotRule rule in _rules)
             {
                 if (rule is Behaviour behaviour && !behaviour.enabled) continue;
