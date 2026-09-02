@@ -427,7 +427,6 @@ MonoBehaviour:
   _maxPullDistance: 2.5
   _strikeDuration: 0.07
   _cancelRadius: 0.6
-  _edgeCancelMargin: 48
 --- !u!4 &1973044489
 Transform:
   m_ObjectHideFlags: 0

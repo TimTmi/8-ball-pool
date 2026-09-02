@@ -377,3 +377,56 @@
     background-image: resource("Sprites/Icon_Shoot");
 }
 
+/* ── Cancel zone ────────────────────────────────────────────── */
+
+/* Drop target for cancelling the current drag: releasing the pointer here discards
+   aim/power. Shown only while a drag is active (InputManager toggles the hidden
+   class); dim red at rest, lit while the pointer hovers it (cancel-zone--hot).
+   picking-mode is Ignore, so presses over it still start a table drag. */
+.cancel-zone {
+    width: 92px;
+    height: 92px;
+    margin: 2px;
+    border-radius: 46px;
+    border-width: 2px;
+    border-color: rgba(235, 70, 60, 0.35);
+    background-color: rgba(235, 70, 60, 0.1);
+    align-items: center;
+    justify-content: center;
+    transition-property: border-color, background-color, scale;
+    transition-duration: 0.12s;
+}
+
+.cancel-zone--hidden {
+    display: none;
+}
+
+.cancel-zone--hot {
+    border-color: rgba(235, 70, 60, 0.95);
+    background-color: rgba(235, 70, 60, 0.3);
+    scale: 1.08 1.08;
+}
+
+/* Two crossed bars instead of a ✕ glyph: font fallbacks render that glyph with an
+   off-centre advance (varies per device), while these are centred by geometry.
+   The 30px box is centred by .cancel-zone's flex; the bars sit at its middle. */
+.cancel-zone-x {
+    width: 30px;
+    height: 30px;
+}
+
+.cancel-zone-x-bar {
+    position: absolute;
+    left: 13px;
+    top: 0;
+    width: 4px;
+    height: 30px;
+    border-radius: 2px;
+    background-color: rgba(235, 70, 60, 0.55);
+    rotate: 45deg;
+}
+
+.cancel-zone-x-bar--alt {
+    rotate: -45deg;
+}
+

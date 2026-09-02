@@ -27,8 +27,6 @@ namespace EightBall.Core
         [Header("Cancel")]
         [Tooltip("Radius around the cue ball (world units) that cancels the current drag: while the pointer is inside, aim and power revert to their pre-drag values, and releasing here cancels the shot setup.")]
         [SerializeField] private float _cancelRadius = 0.6f;
-        [Tooltip("Margin (pixels) along the app's screen edges that cancels the current drag, same behaviour as the cue-ball cancel zone.")]
-        [SerializeField] private float _edgeCancelMargin = 48f;
 
         public float CurrentAimAngle { get; private set; }
         public float CurrentPower { get; private set; } // Normalized 0 to 1
@@ -108,6 +106,7 @@ namespace EightBall.Core
             if (_isPlacingCueBall) HandlePlacementInput();
             else HandleDragInput();
 
+            if (_uiController != null) _uiController.SetCancelZoneVisible(_isDragging);
             UpdateCueVisuals();
             UpdatePowerBar();
             UpdateAimLine();
@@ -170,6 +169,7 @@ namespace EightBall.Core
                     _isDragging = true;
                     _dragStartAimAngle = CurrentAimAngle;
                     _dragStartPower = CurrentPower;
+                    if (_uiController != null) _uiController.SetCancelZoneHot(false);
                 }
             }
             else if (pointer.press.isPressed && _isDragging)
@@ -190,6 +190,7 @@ namespace EightBall.Core
                 if (_isDragging)
                 {
                     _isDragging = false;
+                    if (_uiController != null) _uiController.SetCancelZoneHot(false);
 
                     if (IsPointerInCancelZone(pointer.position.ReadValue()))
                     {
@@ -211,13 +212,8 @@ namespace EightBall.Core
 
         private bool IsPointerInCancelZone(Vector2 pointerPosition)
         {
-            return IsPointerNearScreenEdge(pointerPosition) || IsPointerNearCueBall(pointerPosition);
-        }
-
-        private bool IsPointerNearScreenEdge(Vector2 pointerPosition)
-        {
-            return pointerPosition.x < _edgeCancelMargin || pointerPosition.x > Screen.width - _edgeCancelMargin
-                || pointerPosition.y < _edgeCancelMargin || pointerPosition.y > Screen.height - _edgeCancelMargin;
+            return IsPointerNearCueBall(pointerPosition)
+                || (_uiController != null && _uiController.IsPointerInCancelZone(pointerPosition));
         }
 
         private bool IsPointerNearCueBall(Vector2 pointerPosition)
@@ -252,10 +248,14 @@ namespace EightBall.Core
             Vector2 pointerWorld = _camera.ScreenToWorldPoint(screenPosition);
             Vector2 toBall = (Vector2)_tableSetup.CueBall.transform.position - pointerWorld;
 
-            // Pointer is in a cancel zone (around the cue ball or along the screen
-            // edges): revert to the pre-drag aim/power until it leaves the zone
-            // (which resumes aiming from scratch)
-            if (toBall.magnitude <= _cancelRadius || IsPointerNearScreenEdge(pointerPosition))
+            // Pointer hovers the cancel button mid-drag: light it up as live feedback
+            bool inButtonZone = _uiController != null && _uiController.IsPointerInCancelZone(pointerPosition);
+            if (_uiController != null) _uiController.SetCancelZoneHot(inButtonZone);
+
+            // Pointer is in a cancel zone (around the cue ball or on the cancel button):
+            // revert to the pre-drag aim/power until it leaves the zone (which resumes
+            // aiming from scratch)
+            if (toBall.magnitude <= _cancelRadius || inButtonZone)
             {
                 RestorePreDragState();
                 return;
