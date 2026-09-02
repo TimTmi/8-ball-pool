@@ -38,6 +38,16 @@
                 </ui:Button>
             </ui:VisualElement>
 
+            <!-- Drop a drag here to cancel it: releasing the pointer in this zone discards
+                 aim/power. Hidden except while a drag is active; InputManager lights it up
+                 while the pointer hovers it mid-drag. -->
+            <ui:VisualElement name="cancel-zone" class="cancel-zone cancel-zone--hidden" picking-mode="Ignore">
+                <ui:VisualElement class="cancel-zone-x">
+                    <ui:VisualElement class="cancel-zone-x-bar" />
+                    <ui:VisualElement class="cancel-zone-x-bar cancel-zone-x-bar--alt" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+
             <ui:Button name="shoot-button" class="hud-button shoot-button">
                 <ui:VisualElement class="lock-badge" />
             </ui:Button>

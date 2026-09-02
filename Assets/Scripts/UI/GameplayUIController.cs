@@ -36,6 +36,7 @@ namespace EightBall.UI
         private Label[] _playerOpenLabels;
         private Label _turnBanner;
         private VisualElement _bottomBar;
+        private VisualElement _cancelZone;
         private Label _shootHint;
 
         // Game-over overlay
@@ -79,6 +80,8 @@ namespace EightBall.UI
         private const float ShootHintHoldDuration = 1.2f;
         private const string DefaultShootHintText = "Drag back from the cue ball to set power";
         private const string GameOverHiddenClass = "game-over--hidden";
+        private const string CancelZoneHotClass = "cancel-zone--hot";
+        private const string CancelZoneHiddenClass = "cancel-zone--hidden";
         private const float ShootShakeAmplitude = 8f;
         private const int ShootShakeHalfCycles = 4;
         private const float ShootShakeHalfCycleDuration = 0.05f;
@@ -101,6 +104,7 @@ namespace EightBall.UI
             BindPlayerPanels();
             _turnBanner = _root.Q<Label>("turn-banner");
             _bottomBar = _root.Q<VisualElement>("bottom-bar");
+            _cancelZone = _root.Q<VisualElement>("cancel-zone");
             _shootHint = _root.Q<Label>("shoot-hint");
         }
 
@@ -222,6 +226,34 @@ namespace EightBall.UI
                 SetPanelOpen(false);
                 HideShootDeniedFeedback();
             }
+        }
+
+        /// <summary>True when the screen position lies inside the cancel-zone button —
+        /// releasing a drag there discards aim/power. The point is in UnityEngine.Screen
+        /// space (bottom-left origin); it is matched against the button's laid-out rect,
+        /// so the test stays correct at any panel scaling.</summary>
+        public bool IsPointerInCancelZone(Vector2 screenPosition)
+        {
+            if (_cancelZone == null || _cancelZone.panel == null) return false;
+            if (_cancelZone.resolvedStyle.display == DisplayStyle.None) return false;
+
+            // RuntimePanelUtils expects a top-left origin; UnityEngine.Screen is bottom-left
+            Vector2 flipped = new Vector2(screenPosition.x, Screen.height - screenPosition.y);
+            Vector2 panelPoint = RuntimePanelUtils.ScreenToPanel(_cancelZone.panel, flipped);
+            return _cancelZone.worldBound.Contains(panelPoint);
+        }
+
+        /// <summary>Highlights the cancel zone while the active drag's pointer hovers it.</summary>
+        public void SetCancelZoneHot(bool hot)
+        {
+            _cancelZone?.EnableInClassList(CancelZoneHotClass, hot);
+        }
+
+        /// <summary>The cancel zone only exists while a drag is running; InputManager
+        /// syncs this to its drag state every frame.</summary>
+        public void SetCancelZoneVisible(bool visible)
+        {
+            _cancelZone?.EnableInClassList(CancelZoneHiddenClass, !visible);
         }
 
         /// <summary>
