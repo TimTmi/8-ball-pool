@@ -57,6 +57,9 @@
 .player-panel-balls {
     flex-direction: row;
     flex-wrap: wrap;
+    /* Wide enough for 4 dots (4 x 26px + 6px gap each), so a full 7-ball group
+       wraps into two rows and the panel stays compact horizontally. */
+    width: 128px;
     margin-top: 6px;
 }
 
