@@ -6,12 +6,12 @@ using EightBall.Gameplay;
 namespace EightBall.Rules
 {
     /// <summary>
-    /// Applies the rules to each settled shot. Discovers every active <see cref="IShotRule"/>
-    /// component on the Table object — adding or removing a rule component in the Inspector
-    /// adds or removes it from the evaluation — then feeds the frozen <see cref="ShotReport"/>
-    /// to each rule and applies the accumulated findings: turn hand-over via
-    /// <see cref="TurnManager"/>, ball-in-hand, and match end. Also owns ball-in-hand
-    /// placement, since restoring and positioning the cue ball is a rules decision.
+    /// Applies the rules to each settled shot. Discovers every <see cref="IShotRule"/>
+    /// component on the Table object once — adding or removing a rule component in the
+    /// Inspector adds or removes it from the evaluation — then feeds the frozen
+    /// <see cref="ShotReport"/> to each rule and applies the accumulated findings: turn
+    /// hand-over via <see cref="TurnManager"/>, ball-in-hand, and match end. Also owns
+    /// ball-in-hand placement, since restoring and positioning the cue ball is a rules decision.
     /// </summary>
     public class RulesController : MonoBehaviour
     {
@@ -63,7 +63,8 @@ namespace EightBall.Rules
             if (_shotRecorder != null) _shotRecorder.OnShotRecorded -= HandleShotRecorded;
         }
 
-        /// <summary>Rules are active components on this object, so the set is editable in the Inspector.</summary>
+        /// <summary>Rules are components on this object, so the set is editable in the Inspector.
+        /// A rule component's <c>enabled</c> checkbox is its on/off switch.</summary>
         private void CollectRules()
         {
             _rules.Clear();
@@ -77,11 +78,10 @@ namespace EightBall.Rules
         {
             if (_state.IsGameOver) return;
 
-            CollectRules();
-
             var findings = new RuleFindings();
             foreach (IShotRule rule in _rules)
             {
+                if (rule is Behaviour behaviour && !behaviour.enabled) continue;
                 rule.Evaluate(shot, _state, findings);
             }
 
