@@ -39,3 +39,37 @@
     margin-bottom: 10px;
     -unity-font-style: bold;
 }
+
+.subtitle-label {
+    font-size: 48px;
+    -unity-font-style: bold;
+    color: white;
+    margin-bottom: 40px;
+}
+
+.rules-list {
+    width: 640px;
+}
+
+.rule-row {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.rule-text {
+    flex-grow: 1;
+    margin-right: 24px;
+}
+
+.rule-name {
+    font-size: 30px;
+    color: white;
+    -unity-font-style: bold;
+}
+
+.rule-description {
+    font-size: 20px;
+    color: rgb(220, 220, 220);
+    margin-top: 4px;
+}

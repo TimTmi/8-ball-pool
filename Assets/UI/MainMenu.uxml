@@ -16,6 +16,14 @@
             <ui:Button name="quit-button" text="Quit" class="menu-button" />
         </ui:VisualElement>
 
+        <!-- Rules View (shown by the Play button; Start Match begins the game) -->
+        <ui:VisualElement name="rules-view" class="view-container" style="display: none;">
+            <ui:Label text="Game Rules" class="subtitle-label" />
+            <ui:VisualElement name="rules-list" class="rules-list" />
+            <ui:Button name="start-button" text="Start Match" class="menu-button" style="margin-top: 40px;" />
+            <ui:Button name="rules-back-button" text="Back" class="menu-button" />
+        </ui:VisualElement>
+
         <!-- Credits View -->
         <ui:VisualElement name="credits-view" class="view-container" style="display: none;">
             <ui:Label text="Credits" class="title-label" />

@@ -64,14 +64,31 @@ namespace EightBall.Rules
         }
 
         /// <summary>Rules are components on this object, so the set is editable in the Inspector.
-        /// A rule component's <c>enabled</c> checkbox is its on/off switch.</summary>
+        /// Toggleable rules (<see cref="RuleCatalog"/>) are enabled or disabled from the main
+        /// menu's saved settings before the set is cached.</summary>
         private void CollectRules()
         {
             _rules.Clear();
             foreach (IShotRule rule in GetComponents<IShotRule>())
             {
+                if (rule is Behaviour behaviour && !ApplySettings(rule, behaviour)) continue;
                 _rules.Add(rule);
             }
+        }
+
+        /// <summary>Syncs a toggleable rule's component with the saved settings and reports
+        /// whether it plays this match. Rules outside the catalog are always active.</summary>
+        private static bool ApplySettings(IShotRule rule, Behaviour behaviour)
+        {
+            foreach (RuleCatalog.Entry entry in RuleCatalog.Toggleable)
+            {
+                if (entry.ComponentType != rule.GetType()) continue;
+
+                bool isEnabled = RuleSettings.IsEnabled(entry.Id);
+                behaviour.enabled = isEnabled;
+                return isEnabled;
+            }
+            return true;
         }
 
         private void HandleShotRecorded(ShotReport shot)
@@ -107,7 +124,10 @@ namespace EightBall.Rules
 
             _state.IsFirstShot = false;
 
-            if (findings.GameOver)
+            // Respot veto: EightBallWinRule calls a break-pot of the 8 a loss without knowing
+            // whether EightBallBreakRule is also active, so the respot overrides the same
+            // shot's match end and the pair stays order-independent.
+            if (findings.GameOver && !findings.RespotEight)
             {
                 _state.IsGameOver = true;
                 _state.WinnerIndex = findings.WinnerIndex;

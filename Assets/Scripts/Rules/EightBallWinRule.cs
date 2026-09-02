@@ -3,17 +3,17 @@ using UnityEngine;
 namespace EightBall.Rules
 {
     /// <summary>
-    /// Decides the match from the 8-ball's fate after the break. Potting the 8 after the
-    /// shooter's group was already cleared (before the shot) wins; potting it early, or
-    /// alongside a scratch, loses. The break itself is <see cref="EightBallBreakRule"/>'s
-    /// call — this rule ignores the first shot so the two stay order-independent.
+    /// Decides the match from the 8-ball's fate. Potting the 8 after the shooter's group was
+    /// already cleared (before the shot) wins; potting it early — on the break included — or
+    /// alongside a scratch, loses. When <see cref="EightBallBreakRule"/> is also active it
+    /// flags the break pot for a respot and <c>RulesController</c> lets that respot veto this
+    /// rule's loss, so the two rules stay order-independent.
     /// </summary>
     [DisallowMultipleComponent]
     public class EightBallWinRule : MonoBehaviour, IShotRule
     {
         public void Evaluate(ShotReport shot, GameState state, RuleFindings findings)
         {
-            if (state.IsFirstShot) return;
             if (!BallGroups.WasPotted(shot, BallGroups.EightBall)) return;
 
             // The 8 is only a legal target once the group was cleared before this shot;
