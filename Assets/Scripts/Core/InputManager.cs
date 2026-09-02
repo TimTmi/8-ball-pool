@@ -31,6 +31,10 @@ namespace EightBall.Core
         public float CurrentAimAngle { get; private set; }
         public float CurrentPower { get; private set; } // Normalized 0 to 1
 
+        /// <summary>Distance from the cue ball at which the pointer reaches full power
+        /// (cancel zone edge plus max pull); defines the camera's full-power framing.</summary>
+        public float FullPowerReach => _cancelRadius + _maxPullDistance;
+
         private Camera _camera;
         private bool _isDragging;
         private PowerBar _powerBar;
