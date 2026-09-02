@@ -197,6 +197,45 @@ namespace EightBall.Tests
             Assert.AreEqual(BallGroup.None, BallGroups.GroupOf(BallGroups.EightBall));
         }
 
+        // ── Remaining balls for the player panels ────────────────────
+
+        [Test]
+        public void RemainingBalls_OpenTable_IsEmpty()
+        {
+            Assert.IsEmpty(_state.RemainingBallsFor(BallGroup.None));
+        }
+
+        [Test]
+        public void RemainingBalls_FreshGroup_ShowsWholeGroup()
+        {
+            var remaining = _state.RemainingBallsFor(BallGroup.Solids);
+
+            CollectionAssert.AreEqual(new List<int> { 1, 2, 3, 4, 5, 6, 7 }, remaining);
+        }
+
+        [Test]
+        public void RemainingBalls_PartiallyPocketed_ShowsOnlyRemaining()
+        {
+            AssignGroups(P1, BallGroup.Stripes);
+            _state.PocketedBalls.Add(9);
+            _state.PocketedBalls.Add(15);
+
+            var remaining = _state.RemainingBallsFor(BallGroup.Stripes);
+
+            CollectionAssert.AreEqual(new List<int> { 10, 11, 12, 13, 14 }, remaining);
+        }
+
+        [Test]
+        public void RemainingBalls_GroupCleared_ShowsOnlyTheEight()
+        {
+            AssignGroups(P1, BallGroup.Solids);
+            PocketGroup(_state, P1);
+
+            var remaining = _state.RemainingBallsFor(BallGroup.Solids);
+
+            CollectionAssert.AreEqual(new List<int> { BallGroups.EightBall }, remaining);
+        }
+
         // ── Helpers ──────────────────────────────────────────────────
 
         private static ShotReport Shot(int playerIndex, params int[] pocketed)

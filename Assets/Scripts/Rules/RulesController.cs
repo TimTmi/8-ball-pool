@@ -31,6 +31,9 @@ namespace EightBall.Rules
         /// <summary>True while the player on turn must place the cue ball before aiming.</summary>
         public bool IsBallInHandPending { get; private set; }
 
+        /// <summary>The accumulated match state rules write to; a read-only view for UI relays.</summary>
+        public GameState State => _state;
+
         private readonly GameState _state = new GameState();
         private readonly List<IShotRule> _rules = new List<IShotRule>();
 

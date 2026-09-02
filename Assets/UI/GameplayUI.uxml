@@ -8,9 +8,17 @@
 
     <ui:VisualElement class="gameplay-container">
         <ui:VisualElement class="top-bar">
-            <ui:VisualElement name="turn-indicator" class="turn-indicator turn-indicator--p1">
-                <ui:VisualElement name="turn-dot" class="turn-dot" />
-                <ui:Label name="player-turn-label" text="Player 1's Turn" class="turn-label" />
+            <ui:VisualElement class="player-panels">
+                <ui:VisualElement name="player-panel-0" class="player-panel player-panel--p1">
+                    <ui:Label text="Player 1" class="player-panel-name" />
+                    <ui:VisualElement name="player-panel-balls-0" class="player-panel-balls" />
+                    <ui:Label name="player-panel-open-0" text="Open table" class="player-panel-open" />
+                </ui:VisualElement>
+                <ui:VisualElement name="player-panel-1" class="player-panel player-panel--p2">
+                    <ui:Label text="Player 2" class="player-panel-name" />
+                    <ui:VisualElement name="player-panel-balls-1" class="player-panel-balls" />
+                    <ui:Label name="player-panel-open-1" text="Open table" class="player-panel-open" />
+                </ui:VisualElement>
             </ui:VisualElement>
 
             <!-- Compact cue ball button — always visible in top-right -->

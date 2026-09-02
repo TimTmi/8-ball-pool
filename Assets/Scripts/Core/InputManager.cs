@@ -435,7 +435,21 @@ namespace EightBall.Core
 
             _uiController.SetInputHudVisible(true);
             _uiController.SetTurnPlayer(playerIndex, _turnManager.CurrentPlayerName);
+            UpdatePlayerPanels();
             _uiController.SetShootDeniedHint(_isPlacingCueBall ? "Ball in hand — drag the cue ball to a legal spot" : null);
+        }
+
+        /// <summary>Rebuilds both player panels from the rules state, which was fully
+        /// applied before this turn started (groups, pocketed balls).</summary>
+        private void UpdatePlayerPanels()
+        {
+            GameState state = _rulesController != null ? _rulesController.State : null;
+
+            for (int i = 0; i < 2; i++)
+            {
+                BallGroup group = state != null ? state.PlayerGroups[i] : BallGroup.None;
+                _uiController.SetPlayerPanel(i, group == BallGroup.None, state?.RemainingBallsFor(group));
+            }
         }
 
         /// <summary>A rule ended the match: stop all table input and let the UI show the result.</summary>

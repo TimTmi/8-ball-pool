@@ -28,6 +28,26 @@ namespace EightBall.Rules
 
         public bool IsOpenTable => PlayerGroups[0] == BallGroup.None;
 
+        /// <summary>
+        /// Ball numbers the player on <paramref name="group"/> still has to pocket: the
+        /// group's balls minus pocketed ones, ending with the 8 once the whole group is
+        /// down. Empty while the table is open — there is no group to show.
+        /// </summary>
+        public List<int> RemainingBallsFor(BallGroup group)
+        {
+            var remaining = new List<int>();
+            if (group == BallGroup.None) return remaining;
+
+            int first = group == BallGroup.Solids ? 1 : 9;
+            for (int number = first; number < first + 7; number++)
+            {
+                if (!PocketedBalls.Contains(number)) remaining.Add(number);
+            }
+
+            if (remaining.Count == 0) remaining.Add(BallGroups.EightBall);
+            return remaining;
+        }
+
         public bool IsGameOver { get; set; }
 
         public int WinnerIndex { get; set; }
