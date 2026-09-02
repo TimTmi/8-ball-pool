@@ -53,4 +53,15 @@
 
     <!-- Denied-shoot hint — absolute overlay above the bottom bar, hidden by default -->
     <ui:Label name="shoot-hint" text="Drag back from the cue ball to set power" class="shoot-hint shoot-hint--hidden" />
+
+    <!-- Game-over result — full-screen overlay, hidden by default -->
+    <ui:VisualElement name="game-over" class="game-over game-over--hidden">
+        <ui:VisualElement class="game-over-panel">
+            <ui:Label name="game-over-title" text="Player 1 Wins" class="game-over-title" />
+            <ui:VisualElement class="game-over-buttons">
+                <ui:Button name="game-over-play-again" text="Play Again" class="game-over-button" />
+                <ui:Button name="game-over-menu" text="Menu" class="game-over-button" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
 </ui:UXML>

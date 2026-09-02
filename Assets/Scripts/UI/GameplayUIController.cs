@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 
 namespace EightBall.UI
@@ -35,6 +36,12 @@ namespace EightBall.UI
         private VisualElement _bottomBar;
         private Label _shootHint;
 
+        // Game-over overlay
+        private VisualElement _gameOver;
+        private Label _gameOverTitle;
+        private Button _gameOverPlayAgain;
+        private Button _gameOverMenu;
+
         // Compact cue ball button
         private VisualElement _spinButton;
         private VisualElement _spinButtonDot;
@@ -67,6 +74,8 @@ namespace EightBall.UI
         private const string ShootHintFadingClass = "shoot-hint--fading";
         // How long the denied-shoot hint stays fully visible before dissolving (seconds)
         private const float ShootHintHoldDuration = 1.2f;
+        private const string DefaultShootHintText = "Drag back from the cue ball to set power";
+        private const string GameOverHiddenClass = "game-over--hidden";
         private const float ShootShakeAmplitude = 8f;
         private const int ShootShakeHalfCycles = 4;
         private const float ShootShakeHalfCycleDuration = 0.05f;
@@ -85,6 +94,7 @@ namespace EightBall.UI
             BindLockButtons();
             BindSpinButton();
             BindSpinPanel();
+            BindGameOverOverlay();
             _turnIndicator = _root.Q<VisualElement>("turn-indicator");
             _turnLabel = _root.Q<Label>("player-turn-label");
             _turnBanner = _root.Q<Label>("turn-banner");
@@ -121,8 +131,51 @@ namespace EightBall.UI
                 _root.UnregisterCallback<PointerCancelEvent>(OnRootPointerReleased, TrickleDown.TrickleDown);
             }
 
+            if (_gameOverPlayAgain != null)
+                _gameOverPlayAgain.clicked -= OnPlayAgainClicked;
+
+            if (_gameOverMenu != null)
+                _gameOverMenu.clicked -= OnMenuClicked;
+
             HideShootDeniedFeedback();
         }
+
+        /// <summary>Sets the denied-shoot hint's text; null restores the default power hint.</summary>
+        public void SetShootDeniedHint(string text)
+        {
+            if (_shootHint != null)
+                _shootHint.text = text ?? DefaultShootHintText;
+        }
+
+        /// <summary>Shows the full-screen game-over overlay with the winner's colour.</summary>
+        public void ShowGameOver(int winnerIndex, string winnerName)
+        {
+            if (_gameOver == null) return;
+
+            if (_gameOverTitle != null)
+            {
+                _gameOverTitle.text = $"{winnerName} Wins!";
+                _gameOverTitle.EnableInClassList("game-over-title--p1", winnerIndex == 0);
+                _gameOverTitle.EnableInClassList("game-over-title--p2", winnerIndex == 1);
+            }
+
+            _gameOver.RemoveFromClassList(GameOverHiddenClass);
+        }
+
+        private void BindGameOverOverlay()
+        {
+            _gameOver = _root.Q<VisualElement>("game-over");
+            _gameOverTitle = _root.Q<Label>("game-over-title");
+            _gameOverPlayAgain = _root.Q<Button>("game-over-play-again");
+            _gameOverMenu = _root.Q<Button>("game-over-menu");
+
+            if (_gameOverPlayAgain != null) _gameOverPlayAgain.clicked += OnPlayAgainClicked;
+            if (_gameOverMenu != null) _gameOverMenu.clicked += OnMenuClicked;
+        }
+
+        private void OnPlayAgainClicked() => SceneManager.LoadScene("Gameplay");
+
+        private void OnMenuClicked() => SceneManager.LoadScene("MainMenu");
 
         // ── Binding helpers ───────────────────────────────────────────
 

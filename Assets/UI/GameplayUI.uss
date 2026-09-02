@@ -121,6 +121,70 @@
     opacity: 0;
 }
 
+/* ── Game-over overlay (absolute, full screen) ──────────────── */
+
+/* Shown when a rule ends the match. GameplayUIController shows it with the
+   winner's colour and hides the input HUD behind it. */
+.game-over {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    align-items: center;
+    justify-content: center;
+}
+
+.game-over--hidden {
+    display: none;
+}
+
+.game-over-panel {
+    align-items: center;
+    background-color: rgba(15, 15, 15, 0.85);
+    border-radius: 24px;
+    border-width: 2px;
+    border-color: rgba(255, 255, 255, 0.15);
+    padding: 40px 56px;
+}
+
+.game-over-title {
+    font-size: 52px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    color: white;
+}
+
+.game-over-title--p1 {
+    color: rgb(245, 195, 65);
+}
+
+.game-over-title--p2 {
+    color: rgb(95, 170, 255);
+}
+
+.game-over-buttons {
+    flex-direction: row;
+    margin-top: 28px;
+}
+
+.game-over-button {
+    font-size: 24px;
+    -unity-font-style: bold;
+    color: white;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 32px;
+    border-width: 3px;
+    border-color: rgb(70, 200, 90);
+    padding: 12px 32px;
+    margin: 0 8px;
+}
+
+.game-over-button:hover {
+    border-color: rgba(255, 255, 255, 0.6);
+}
+
 /* ── Compact spin button (always-visible cue ball) ──────────── */
 
 .spin-button {
