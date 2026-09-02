@@ -30,5 +30,15 @@ namespace EightBall.Rules
         {
             return GroupOf(ballNumber) == group;
         }
+
+        /// <summary>True when the shot pocketed the given ball.</summary>
+        public static bool WasPotted(ShotReport shot, int ballNumber)
+        {
+            foreach (int pocketed in shot.PocketedBallNumbers)
+            {
+                if (pocketed == ballNumber) return true;
+            }
+            return false;
+        }
     }
 }

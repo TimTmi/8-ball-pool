@@ -139,10 +139,21 @@ namespace EightBall.Tests
         {
             _state.IsFirstShot = true;
 
-            RuleFindings findings = Evaluate<EightBallWinRule>(Shot(P1, BallGroups.EightBall));
+            RuleFindings findings = Evaluate<EightBallBreakRule>(Shot(P1, BallGroups.EightBall));
 
             Assert.IsTrue(findings.RespotEight);
             Assert.IsFalse(findings.GameOver);
+        }
+
+        [Test]
+        public void EightOnBreak_WinRuleDoesNotEndMatch()
+        {
+            _state.IsFirstShot = true;
+
+            RuleFindings findings = Evaluate<EightBallWinRule>(Shot(P1, BallGroups.EightBall));
+
+            Assert.IsFalse(findings.GameOver);
+            Assert.IsFalse(findings.RespotEight);
         }
 
         [Test]

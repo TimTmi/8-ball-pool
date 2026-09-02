@@ -3,22 +3,18 @@ using UnityEngine;
 namespace EightBall.Rules
 {
     /// <summary>
-    /// Decides the match from the 8-ball's fate. Potting the 8 after the shooter's group was
-    /// already cleared (before the shot) wins; potting it early, or alongside a scratch, loses.
-    /// An 8-ball down on the break is respotted instead of ending the match.
+    /// Decides the match from the 8-ball's fate after the break. Potting the 8 after the
+    /// shooter's group was already cleared (before the shot) wins; potting it early, or
+    /// alongside a scratch, loses. The break itself is <see cref="EightBallBreakRule"/>'s
+    /// call — this rule ignores the first shot so the two stay order-independent.
     /// </summary>
     [DisallowMultipleComponent]
     public class EightBallWinRule : MonoBehaviour, IShotRule
     {
         public void Evaluate(ShotReport shot, GameState state, RuleFindings findings)
         {
-            if (!Contains(shot, BallGroups.EightBall)) return;
-
-            if (state.IsFirstShot)
-            {
-                findings.RespotEight = true;
-                return;
-            }
+            if (state.IsFirstShot) return;
+            if (!BallGroups.WasPotted(shot, BallGroups.EightBall)) return;
 
             // The 8 is only a legal target once the group was cleared before this shot;
             // potting it in the same stroke as the last group ball loses, as does a scratch.
@@ -46,15 +42,6 @@ namespace EightBall.Rules
         private static bool GroupAssigned(GameState state, int playerIndex)
         {
             return state.PlayerGroups[playerIndex] != BallGroup.None;
-        }
-
-        private static bool Contains(ShotReport shot, int ballNumber)
-        {
-            foreach (int pocketed in shot.PocketedBallNumbers)
-            {
-                if (pocketed == ballNumber) return true;
-            }
-            return false;
         }
 
         private static int OtherPlayer(int playerIndex) => (playerIndex + 1) % 2;
