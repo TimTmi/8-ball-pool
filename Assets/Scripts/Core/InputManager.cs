@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using EightBall.UI;
 using EightBall.Gameplay;
+using EightBall.Rules;
 
 namespace EightBall.Core
 {
@@ -13,6 +14,7 @@ namespace EightBall.Core
         private TableSetup _tableSetup;
         private CueController _cueController;
         private TurnManager _turnManager;
+        private RulesController _rulesController;
 
         [Header("Power")]
         [Tooltip("Max cue pull-back distance (world units). Power is 0 at the cancel zone edge and pointer distance beyond it maps 1:1 to the cue pull, clamped here; full power is reached at cancel radius + this distance.")]
@@ -39,13 +41,21 @@ namespace EightBall.Core
         /// <summary>True while the cue is being driven into the ball, which owns the cue transform.</summary>
         private bool _isStriking;
 
+        /// <summary>Ball in hand: the player must drag the cue ball to a legal spot before aiming.</summary>
+        private bool _isPlacingCueBall;
+
+        /// <summary>True after a rule has ended the match; all table input stops.</summary>
+        private bool _isGameOver;
+
         // Aim/power state captured when the current drag started, restored if the player
         // drags into the cancel zone around the cue ball
         private float _dragStartAimAngle;
         private float _dragStartPower;
 
-        /// <summary>Aiming is only allowed once every ball has come to rest.</summary>
-        private bool CanAim => !_isStriking && (_cueController == null || _cueController.IsTableSettled);
+        /// <summary>Aiming is only allowed once every ball has come to rest, the cue ball is
+        /// placed, and no rule has ended the match.</summary>
+        private bool CanAim => !_isStriking && !_isPlacingCueBall && !_isGameOver
+            && (_cueController == null || _cueController.IsTableSettled);
 
         /// <summary>Cue length in world units; the sprite is authored at this size.</summary>
         private const float CueLength = 8f;
@@ -64,9 +74,14 @@ namespace EightBall.Core
             _tableSetup = FindAnyObjectByType<TableSetup>();
             _cueController = FindAnyObjectByType<CueController>();
             _turnManager = FindAnyObjectByType<TurnManager>();
+            _rulesController = FindAnyObjectByType<RulesController>();
             if (_turnManager != null)
             {
                 _turnManager.OnTurnStarted += HandleTurnStarted;
+            }
+            if (_rulesController != null)
+            {
+                _rulesController.OnGameOver += HandleGameOver;
             }
         }
 
@@ -81,14 +96,54 @@ namespace EightBall.Core
             {
                 _turnManager.OnTurnStarted -= HandleTurnStarted;
             }
+
+            if (_rulesController != null)
+            {
+                _rulesController.OnGameOver -= HandleGameOver;
+            }
         }
 
         private void Update()
         {
-            HandleDragInput();
+            if (_isPlacingCueBall) HandlePlacementInput();
+            else HandleDragInput();
+
             UpdateCueVisuals();
             UpdatePowerBar();
             UpdateAimLine();
+        }
+
+        /// <summary>
+        /// Ball-in-hand placement: while the finger is down the cue ball follows it (clamped to
+        /// the felt), tinting red over illegal spots; a release on a legal spot commits it and
+        /// normal aiming resumes.
+        /// </summary>
+        private void HandlePlacementInput()
+        {
+            if (_rulesController == null || _tableSetup == null || _tableSetup.CueBall == null) return;
+            if (_camera == null) return;
+
+            var pointer = Pointer.current;
+            if (pointer == null) return;
+
+            // A press the HUD owns never moves the ball
+            if (_uiController != null && _uiController.IsPointerPressOnUI) return;
+
+            if (pointer.press.isPressed)
+            {
+                Vector3 screenPosition = new Vector3(pointer.position.ReadValue().x, pointer.position.ReadValue().y, -_camera.transform.position.z);
+                _rulesController.PlaceCueBallAt(_camera.ScreenToWorldPoint(screenPosition));
+                _rulesController.SetCueBallLegalMarker(_rulesController.IsCueBallPlacementLegal(_tableSetup.CueBall.transform.position));
+            }
+            else if (pointer.press.wasReleasedThisFrame)
+            {
+                if (_rulesController.IsCueBallPlacementLegal(_tableSetup.CueBall.transform.position))
+                {
+                    _isPlacingCueBall = false;
+                    _rulesController.CompleteBallInHand();
+                    if (_uiController != null) _uiController.SetShootDeniedHint(null);
+                }
+            }
         }
 
         private void HandleDragInput()
@@ -310,7 +365,7 @@ namespace EightBall.Core
 
             // Guard re-entry: the button disarms (red) during the stroke, but a queued click must
             // not start a second one.
-            if (_isStriking || !_cueController.IsTableSettled) return;
+            if (_isStriking || _isGameOver || _isPlacingCueBall || !_cueController.IsTableSettled) return;
 
             StartCoroutine(StrikeAndShoot(CurrentAimAngle, CurrentPower));
         }
@@ -372,10 +427,28 @@ namespace EightBall.Core
 
         private void HandleTurnStarted(int playerIndex)
         {
-            if (_uiController != null && _turnManager != null)
+            if (_uiController == null || _turnManager == null) return;
+
+            // A turn may start under ball in hand (a scratch on the previous shot):
+            // aim stays locked out until the cue ball has been placed
+            _isPlacingCueBall = _rulesController != null && _rulesController.IsBallInHandPending;
+
+            _uiController.SetInputHudVisible(true);
+            _uiController.SetTurnPlayer(playerIndex, _turnManager.CurrentPlayerName);
+            _uiController.SetShootDeniedHint(_isPlacingCueBall ? "Ball in hand — drag the cue ball to a legal spot" : null);
+        }
+
+        /// <summary>A rule ended the match: stop all table input and let the UI show the result.</summary>
+        private void HandleGameOver(int winnerIndex)
+        {
+            _isGameOver = true;
+            _isPlacingCueBall = false;
+            _isDragging = false;
+
+            if (_uiController != null)
             {
-                _uiController.SetInputHudVisible(true);
-                _uiController.SetTurnPlayer(playerIndex, _turnManager.CurrentPlayerName);
+                _uiController.SetInputHudVisible(false);
+                _uiController.ShowGameOver(winnerIndex, $"Player {winnerIndex + 1}");
             }
         }
     }
