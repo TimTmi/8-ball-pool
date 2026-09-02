@@ -105,6 +105,8 @@
 
 .rule-text {
     flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
     margin-right: 24px;
 }
 
@@ -118,4 +120,5 @@
     font-size: 20px;
     color: rgb(220, 220, 220);
     margin-top: 4px;
+    white-space: normal;
 }
