@@ -9,8 +9,8 @@ namespace EightBall.UI
     public class MainMenuController : MonoBehaviour
     {
         private VisualElement _menuView;
-        private VisualElement _rulesView;
         private VisualElement _creditsView;
+        private VisualElement _rulesModal;
         private VisualElement _rulesList;
 
         private Button _playButton;
@@ -29,8 +29,8 @@ namespace EightBall.UI
             if (root == null) return;
 
             _menuView = root.Q<VisualElement>("menu-view");
-            _rulesView = root.Q<VisualElement>("rules-view");
             _creditsView = root.Q<VisualElement>("credits-view");
+            _rulesModal = root.Q<VisualElement>("rules-modal");
             _rulesList = root.Q<VisualElement>("rules-list");
 
             _playButton = root.Q<Button>("play-button");
@@ -62,7 +62,7 @@ namespace EightBall.UI
 
         private void OnPlayClicked()
         {
-            ShowView(_rulesView);
+            if (_rulesModal != null) _rulesModal.style.display = DisplayStyle.Flex;
         }
 
         private void OnStartClicked()
@@ -72,7 +72,7 @@ namespace EightBall.UI
 
         private void OnRulesBackClicked()
         {
-            ShowView(_menuView);
+            if (_rulesModal != null) _rulesModal.style.display = DisplayStyle.None;
         }
 
         private void OnCreditsClicked()
@@ -93,11 +93,11 @@ namespace EightBall.UI
 #endif
         }
 
-        /// <summary>Shows one of the three views and hides the others.</summary>
+        /// <summary>Shows the menu or credits view and hides the other. The rules
+        /// modal is independent — it opens on top of whichever view is active.</summary>
         private void ShowView(VisualElement view)
         {
             if (_menuView != null) _menuView.style.display = view == _menuView ? DisplayStyle.Flex : DisplayStyle.None;
-            if (_rulesView != null) _rulesView.style.display = view == _rulesView ? DisplayStyle.Flex : DisplayStyle.None;
             if (_creditsView != null) _creditsView.style.display = view == _creditsView ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
