@@ -74,3 +74,23 @@
 **Context**: `ShotPrediction` originally walked at a fixed 0.02s while the project runs physics at 0.01s.
 **Decision**: The walk uses `Time.fixedDeltaTime`, capped by step count and by a 15u path length.
 **Rationale**: Measured against the same model at the physics rate, the coarser clock integrated damping badly enough to draw the line up to 0.22u — over two ball radii — past where the ball really stops. Matching the clock makes the two identical by construction rather than by luck, and follows the setting if it ever changes again. Cost is 6-95 casts for a realistic shot; only a soft shot into an open table reaches the cap.
+
+## [2026-09-02] Rules Are IShotRule Components Discovered on the Table Object
+**Context**: The rules phase needed a home for fouls, groups, and win/loss. The ask was that rules be addable/removable like components.
+**Decision**: `IShotRule { void Evaluate(ShotReport, GameState, RuleFindings) }`; `RulesController` discovers active rule components with `GetComponents<IShotRule>()` each shot. Rules are read-only evaluators that accumulate findings on a shared `RuleFindings`; the controller applies them. Match state lives in a pure `GameState` class.
+**Rationale**: Adding/removing/toggling a rule becomes an Inspector operation, per the request. Pure evaluation over frozen data keeps the logic unit-testable (coding rules) and removes callback-order races by construction. Rejected: a single `EightBallRules` class (not component-removable) and per-rule verdict merging (rules never read each other's findings; the controller owns application).
+
+## [2026-09-02] Shot Facts Are Frozen by a Recorder, Not Observed Live
+**Context**: Rules need pocketings, but Unity gives no ordering guarantee between multiple `OnCollisionEnter2D`/trigger callbacks or multiple settle subscribers.
+**Decision**: `ShotRecorder` subscribes to the balls' new `Ball.OnPocketed` events (pocket capture and the out-of-bounds failsafe both funnel through `Ball.Drop()`) and re-emits one `OnShotRecorded(ShotReport)` when the table settles. `CueController` gained `OnShotStarted` (fired on an accepted shot) and lost its private scratch auto-restore — the cue ball stays down until a rule brings it back.
+**Rationale**: One coherent report event removes ordering hazards by construction instead of by subscription-order luck. The deleted `ReturnScratchedCueBall` was a rule living in the physics layer; a defensive fallback in `RulesController` restores the cue ball if all scratch rules are removed, so the game cannot stall.
+
+## [2026-09-02] Ball In Hand: Free Placement Anywhere, Mobile-Game 8-Ball Conventions
+**Context**: After a scratch the opponent needs the cue ball back. Full standard fouls were out of scope for this pass.
+**Decision**: A scratch hands the opponent ball in hand anywhere on the table: `RulesController` restores the cue ball on the head spot, `InputManager` runs a placement mode (ball follows the finger, red tint over illegal spots, commit on legal release), and the shoot button stays locked until `CompleteBallInHand`. The 8-ball follows the 8 Ball Pool mobile game: no called shots, potting the 8 in the same stroke as the last group ball loses, 8 on the break is respotted at the foot spot.
+**Rationale**: Matches the reference game's behaviour and keeps the first rules pass small. Head-string-only placement on breaks and shooter's choice on mixed pots are the known simplifications; both would only touch the rule components.
+
+## [2026-09-02] TurnManager Demoted to Verdict Executor
+**Context**: The old TurnManager subscribed to `CueController.OnTableSettled` and unconditionally flipped the player — the one rule that existed was hardcoded into the flow.
+**Decision**: `TurnManager` lost its `CueController` subscription and now only exposes `BeginTurn(int)`; `RulesController` decides who plays next and calls it. Initial state stays Player 1 with no announcement (as before).
+**Rationale**: One decision point (rules) and one executor. A defensive fallback restores a pocketed cue ball on the head spot if the scratch rule component is removed, so the table can never be left cue-less by an Inspector change.
