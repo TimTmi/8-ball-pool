@@ -139,10 +139,43 @@ namespace EightBall.Tests
         {
             _state.IsFirstShot = true;
 
-            RuleFindings findings = Evaluate<EightBallWinRule>(Shot(P1, BallGroups.EightBall));
+            RuleFindings findings = Evaluate<EightBallBreakRule>(Shot(P1, BallGroups.EightBall));
 
             Assert.IsTrue(findings.RespotEight);
             Assert.IsFalse(findings.GameOver);
+        }
+
+        [Test]
+        public void EightOnBreak_WithoutBreakRule_LosesMatch()
+        {
+            _state.IsFirstShot = true;
+
+            RuleFindings findings = Evaluate<EightBallWinRule>(Shot(P1, BallGroups.EightBall));
+
+            Assert.IsTrue(findings.GameOver);
+            Assert.AreEqual(P2, findings.WinnerIndex);
+        }
+
+        [Test]
+        public void EightOnBreak_BothRules_SetRespotInAnyOrder()
+        {
+            _state.IsFirstShot = true;
+            ShotReport shot = Shot(P1, BallGroups.EightBall);
+
+            // Both findings together mean "respot, not match end": RulesController lets the
+            // respot veto the win rule's loss, whichever rule ran first.
+            var breakFirst = new RuleFindings();
+            var rules = new List<IShotRule> { NewRule<EightBallBreakRule>(), NewRule<EightBallWinRule>() };
+            rules[0].Evaluate(shot, _state, breakFirst);
+            rules[1].Evaluate(shot, _state, breakFirst);
+            Assert.IsTrue(breakFirst.RespotEight);
+            Assert.IsTrue(breakFirst.GameOver);
+
+            var winFirst = new RuleFindings();
+            rules[1].Evaluate(shot, _state, winFirst);
+            rules[0].Evaluate(shot, _state, winFirst);
+            Assert.IsTrue(winFirst.RespotEight);
+            Assert.IsTrue(winFirst.GameOver);
         }
 
         [Test]
@@ -251,10 +284,15 @@ namespace EightBall.Tests
         /// <summary>Evaluates the rule of type <typeparamref name="T"/> on a fresh GameObject.</summary>
         private RuleFindings Evaluate<T>(ShotReport shot) where T : MonoBehaviour, IShotRule
         {
-            var rule = new GameObject("Rule").AddComponent<T>();
+            var rule = NewRule<T>();
             var findings = new RuleFindings();
             rule.Evaluate(shot, _state, findings);
             return findings;
+        }
+
+        private IShotRule NewRule<T>() where T : MonoBehaviour, IShotRule
+        {
+            return new GameObject("Rule").AddComponent<T>();
         }
 
         private void AssignGroups(int playerIndex, BallGroup group)

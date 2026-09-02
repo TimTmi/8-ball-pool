@@ -39,3 +39,86 @@
     margin-bottom: 10px;
     -unity-font-style: bold;
 }
+
+/* ── Rules modal (opened by the Play button, on top of the menu) ── */
+
+.modal-backdrop {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-panel {
+    width: 720px;
+    background-color: rgba(15, 15, 15, 0.85);
+    border-radius: 24px;
+    border-width: 2px;
+    border-color: rgba(255, 255, 255, 0.15);
+    padding: 40px 48px;
+}
+
+.modal-title {
+    font-size: 48px;
+    -unity-font-style: bold;
+    color: white;
+    -unity-text-align: middle-center;
+    margin-bottom: 32px;
+}
+
+.modal-primary-button {
+    width: 100%;
+    margin-top: 32px;
+    margin-bottom: 12px;
+    background-color: rgb(34, 139, 34);
+    color: white;
+}
+
+.modal-primary-button:hover {
+    background-color: rgb(42, 165, 42);
+}
+
+.modal-secondary-button {
+    width: 100%;
+    margin-bottom: 0;
+    background-color: rgba(255, 255, 255, 0.08);
+    color: white;
+}
+
+.modal-secondary-button:hover {
+    background-color: rgba(255, 255, 255, 0.16);
+}
+
+.rules-list {
+    width: 100%;
+}
+
+.rule-row {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.rule-text {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
+    margin-right: 24px;
+}
+
+.rule-name {
+    font-size: 30px;
+    color: white;
+    -unity-font-style: bold;
+}
+
+.rule-description {
+    font-size: 20px;
+    color: rgb(220, 220, 220);
+    margin-top: 4px;
+    white-space: normal;
+}

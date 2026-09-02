@@ -26,5 +26,16 @@
             <ui:Label text="23127396    Lương Linh Khôi" class="credits-text" />
             <ui:Button name="back-button" text="Back" class="menu-button" style="margin-top: 40px;" />
         </ui:VisualElement>
+
+        <!-- Rules modal (opened by the Play button; Start Match begins the game).
+             Sits last so it draws on top of the menu. -->
+        <ui:VisualElement name="rules-modal" class="modal-backdrop" style="display: none;">
+            <ui:VisualElement name="rules-panel" class="modal-panel">
+                <ui:Label text="Game Rules" class="modal-title" />
+                <ui:VisualElement name="rules-list" class="rules-list" />
+                <ui:Button name="start-button" text="Start Match" class="menu-button modal-primary-button" />
+                <ui:Button name="rules-back-button" text="Back" class="menu-button modal-secondary-button" />
+            </ui:VisualElement>
+        </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

@@ -6,12 +6,12 @@ using EightBall.Gameplay;
 namespace EightBall.Rules
 {
     /// <summary>
-    /// Applies the rules to each settled shot. Discovers every active <see cref="IShotRule"/>
-    /// component on the Table object — adding or removing a rule component in the Inspector
-    /// adds or removes it from the evaluation — then feeds the frozen <see cref="ShotReport"/>
-    /// to each rule and applies the accumulated findings: turn hand-over via
-    /// <see cref="TurnManager"/>, ball-in-hand, and match end. Also owns ball-in-hand
-    /// placement, since restoring and positioning the cue ball is a rules decision.
+    /// Applies the rules to each settled shot. Discovers every <see cref="IShotRule"/>
+    /// component on the Table object once — adding or removing a rule component in the
+    /// Inspector adds or removes it from the evaluation — then feeds the frozen
+    /// <see cref="ShotReport"/> to each rule and applies the accumulated findings: turn
+    /// hand-over via <see cref="TurnManager"/>, ball-in-hand, and match end. Also owns
+    /// ball-in-hand placement, since restoring and positioning the cue ball is a rules decision.
     /// </summary>
     public class RulesController : MonoBehaviour
     {
@@ -63,25 +63,47 @@ namespace EightBall.Rules
             if (_shotRecorder != null) _shotRecorder.OnShotRecorded -= HandleShotRecorded;
         }
 
-        /// <summary>Rules are active components on this object, so the set is editable in the Inspector.</summary>
+        /// <summary>Rules are components on this object, so the set is editable in the Inspector.
+        /// Toggleable rules (<see cref="RuleCatalog"/>) are enabled or disabled from the main
+        /// menu's saved settings before the set is cached.</summary>
         private void CollectRules()
         {
             _rules.Clear();
             foreach (IShotRule rule in GetComponents<IShotRule>())
             {
+                if (rule is Behaviour behaviour && !ApplySettings(rule, behaviour)) continue;
                 _rules.Add(rule);
             }
+        }
+
+        /// <summary>Syncs a toggleable rule's component with the saved settings and reports
+        /// whether it plays this match. Rules outside the catalog are always active.</summary>
+        private static bool ApplySettings(IShotRule rule, Behaviour behaviour)
+        {
+            foreach (RuleCatalog.Entry entry in RuleCatalog.Toggleable)
+            {
+                if (entry.ComponentType != rule.GetType()) continue;
+
+                bool isEnabled = RuleSettings.IsEnabled(entry.Id);
+                behaviour.enabled = isEnabled;
+                return isEnabled;
+            }
+            return true;
         }
 
         private void HandleShotRecorded(ShotReport shot)
         {
             if (_state.IsGameOver) return;
 
-            CollectRules();
-
-            var findings = new RuleFindings();
+            var findings = new RuleFindings
+            {
+                // Default is "pass the turn": with TurnContinuationRule disabled, no rule
+                // writes NextPlayerIndex and play strictly alternates. Potting rules override.
+                NextPlayerIndex = (shot.PlayerIndex + 1) % 2
+            };
             foreach (IShotRule rule in _rules)
             {
+                if (rule is Behaviour behaviour && !behaviour.enabled) continue;
                 rule.Evaluate(shot, _state, findings);
             }
 
@@ -107,7 +129,10 @@ namespace EightBall.Rules
 
             _state.IsFirstShot = false;
 
-            if (findings.GameOver)
+            // Respot veto: EightBallWinRule calls a break-pot of the 8 a loss without knowing
+            // whether EightBallBreakRule is also active, so the respot overrides the same
+            // shot's match end and the pair stays order-independent.
+            if (findings.GameOver && !findings.RespotEight)
             {
                 _state.IsGameOver = true;
                 _state.WinnerIndex = findings.WinnerIndex;
