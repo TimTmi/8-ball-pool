@@ -137,6 +137,9 @@ namespace EightBall.Rules
             {
                 cueBall.Restore();
                 cueBall.transform.localPosition = TableLayout.HeadSpot;
+                // The carried ball must not interact with the table while it follows the finger
+                // — no shoving other balls, no pocket capture. Physics returns on commit.
+                cueBall.SetPhysicsActive(false);
             }
 
             IsBallInHandPending = true;
@@ -147,6 +150,10 @@ namespace EightBall.Rules
         public void CompleteBallInHand()
         {
             IsBallInHandPending = false;
+
+            Ball cueBall = GetCueBall();
+            if (cueBall != null) cueBall.SetPhysicsActive(true);
+
             SetCueBallTint(Color.white);
         }
 

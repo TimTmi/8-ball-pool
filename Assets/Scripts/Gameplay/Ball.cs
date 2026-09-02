@@ -91,9 +91,7 @@ namespace EightBall.Gameplay
             IsPocketed = true;
             OnPocketed?.Invoke(this);
             StopImmediately();
-
-            if (_collider != null) _collider.enabled = false;
-            if (_body != null) _body.simulated = false;
+            SetPhysicsActive(false);
 
             _fullScale = transform.localScale;
             StartCoroutine(SinkIntoPocket());
@@ -109,10 +107,20 @@ namespace EightBall.Gameplay
             SetSpriteAlpha(1f);
 
             gameObject.SetActive(true);
-            if (_collider != null) _collider.enabled = true;
-            if (_body != null) _body.simulated = true;
+            SetPhysicsActive(true);
 
             StopImmediately();
+        }
+
+        /// <summary>
+        /// Turns physical interaction with the table on or off without changing pocketed state.
+        /// Used while the cue ball is carried for ball-in-hand placement: the carried ball must
+        /// not shove other balls or be captured by a pocket while it follows the finger.
+        /// </summary>
+        public void SetPhysicsActive(bool isActive)
+        {
+            if (_collider != null) _collider.enabled = isActive;
+            if (_body != null) _body.simulated = isActive;
         }
 
         private void FixedUpdate()
