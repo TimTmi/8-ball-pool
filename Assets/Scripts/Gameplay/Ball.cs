@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 
@@ -12,6 +13,9 @@ namespace EightBall.Gameplay
     [RequireComponent(typeof(Rigidbody2D))]
     public class Ball : MonoBehaviour
     {
+        /// <summary>Raised when the ball drops out of play — pocket capture and the
+        /// out-of-bounds failsafe both funnel through <see cref="Drop"/>.</summary>
+        public event Action<Ball> OnPocketed;
         /// <summary>
         /// Speed (units/sec) below which a ball is snapped to a full stop. Linear damping decays
         /// velocity exponentially, so a ball never actually reaches zero on its own.
@@ -85,6 +89,7 @@ namespace EightBall.Gameplay
             if (IsPocketed) return;
 
             IsPocketed = true;
+            OnPocketed?.Invoke(this);
             StopImmediately();
 
             if (_collider != null) _collider.enabled = false;
