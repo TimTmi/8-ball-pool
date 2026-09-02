@@ -580,7 +580,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EightBall.Gameplay.CueController
   _minShotSpeed: 1
-  _maxShotSpeed: 16
+  _maxShotSpeed: 32
 --- !u!114 &2063585318
 MonoBehaviour:
   m_ObjectHideFlags: 0
