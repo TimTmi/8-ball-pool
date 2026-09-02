@@ -8,7 +8,18 @@
 
     <ui:VisualElement class="gameplay-container">
         <ui:VisualElement class="top-bar">
-            <ui:Label name="player-turn-label" text="Player 1's Turn" class="turn-label" />
+            <ui:VisualElement class="player-panels">
+                <ui:VisualElement name="player-panel-0" class="player-panel player-panel--p1">
+                    <ui:Label text="Player 1" class="player-panel-name" />
+                    <ui:VisualElement name="player-panel-balls-0" class="player-panel-balls" />
+                    <ui:Label name="player-panel-open-0" text="Open table" class="player-panel-open" />
+                </ui:VisualElement>
+                <ui:VisualElement name="player-panel-1" class="player-panel player-panel--p2">
+                    <ui:Label text="Player 2" class="player-panel-name" />
+                    <ui:VisualElement name="player-panel-balls-1" class="player-panel-balls" />
+                    <ui:Label name="player-panel-open-1" text="Open table" class="player-panel-open" />
+                </ui:VisualElement>
+            </ui:VisualElement>
 
             <!-- Compact cue ball button — always visible in top-right -->
             <ui:VisualElement name="spin-button" class="spin-button">
@@ -43,5 +54,22 @@
             <ui:VisualElement name="spin-hit-dot" class="spin-hit-dot" />
         </ui:VisualElement>
         <ui:Label class="spin-panel-label" text="Hit Point" />
+    </ui:VisualElement>
+
+    <!-- Turn-change announcement — absolute overlay, hidden by default -->
+    <ui:Label name="turn-banner" text="Player 1's Turn" class="turn-banner turn-banner--hidden" />
+
+    <!-- Denied-shoot hint — absolute overlay above the bottom bar, hidden by default -->
+    <ui:Label name="shoot-hint" text="Drag back from the cue ball to set power" class="shoot-hint shoot-hint--hidden" />
+
+    <!-- Game-over result — full-screen overlay, hidden by default -->
+    <ui:VisualElement name="game-over" class="game-over game-over--hidden">
+        <ui:VisualElement class="game-over-panel">
+            <ui:Label name="game-over-title" text="Player 1 Wins" class="game-over-title" />
+            <ui:VisualElement class="game-over-buttons">
+                <ui:Button name="game-over-play-again" text="Play Again" class="game-over-button" />
+                <ui:Button name="game-over-menu" text="Menu" class="game-over-button" />
+            </ui:VisualElement>
+        </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

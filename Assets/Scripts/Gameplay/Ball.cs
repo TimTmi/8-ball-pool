@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 
@@ -12,6 +13,9 @@ namespace EightBall.Gameplay
     [RequireComponent(typeof(Rigidbody2D))]
     public class Ball : MonoBehaviour
     {
+        /// <summary>Raised when the ball drops out of play — pocket capture and the
+        /// out-of-bounds failsafe both funnel through <see cref="Drop"/>.</summary>
+        public event Action<Ball> OnPocketed;
         /// <summary>
         /// Speed (units/sec) below which a ball is snapped to a full stop. Linear damping decays
         /// velocity exponentially, so a ball never actually reaches zero on its own.
@@ -85,10 +89,9 @@ namespace EightBall.Gameplay
             if (IsPocketed) return;
 
             IsPocketed = true;
+            OnPocketed?.Invoke(this);
             StopImmediately();
-
-            if (_collider != null) _collider.enabled = false;
-            if (_body != null) _body.simulated = false;
+            SetPhysicsActive(false);
 
             _fullScale = transform.localScale;
             StartCoroutine(SinkIntoPocket());
@@ -104,10 +107,20 @@ namespace EightBall.Gameplay
             SetSpriteAlpha(1f);
 
             gameObject.SetActive(true);
-            if (_collider != null) _collider.enabled = true;
-            if (_body != null) _body.simulated = true;
+            SetPhysicsActive(true);
 
             StopImmediately();
+        }
+
+        /// <summary>
+        /// Turns physical interaction with the table on or off without changing pocketed state.
+        /// Used while the cue ball is carried for ball-in-hand placement: the carried ball must
+        /// not shove other balls or be captured by a pocket while it follows the finger.
+        /// </summary>
+        public void SetPhysicsActive(bool isActive)
+        {
+            if (_collider != null) _collider.enabled = isActive;
+            if (_body != null) _body.simulated = isActive;
         }
 
         private void FixedUpdate()

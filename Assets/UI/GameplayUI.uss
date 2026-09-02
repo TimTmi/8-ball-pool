@@ -12,10 +12,212 @@
     padding: 20px;
 }
 
-.turn-label {
-    font-size: 30px;
+/* Player panels — one per player, stacked top-left. Each shows the balls that player
+   still owes; the active player's panel is lit in their colour.
+   GameplayUIController toggles player-panel--active and --pulse on turn change,
+   and rebuilds the ball dots (player-panel-balls) from the rules state each turn. */
+.player-panels {
+    flex-direction: column;
+}
+
+.player-panel {
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 16px;
+    border-width: 3px;
+    border-color: rgba(255, 255, 255, 0.12);
+    padding: 10px 16px;
+    margin-bottom: 8px;
+    opacity: 0.55;
+    transition-property: opacity, border-color, scale;
+    transition-duration: 0.15s;
+}
+
+.player-panel--active {
+    opacity: 1;
+}
+
+.player-panel--p1.player-panel--active {
+    border-color: rgb(245, 195, 65);
+}
+
+.player-panel--p2.player-panel--active {
+    border-color: rgb(95, 170, 255);
+}
+
+.player-panel--pulse {
+    scale: 1.06 1.06;
+}
+
+.player-panel-name {
+    font-size: 24px;
     -unity-font-style: bold;
     color: white;
+}
+
+.player-panel-balls {
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-top: 6px;
+}
+
+/* Shown instead of dots while no group is assigned to the player */
+.player-panel-open {
+    font-size: 20px;
+    color: rgba(255, 255, 255, 0.6);
+    margin-top: 4px;
+}
+
+/* One remaining ball — dot uses the generated ball sprite, so solids, stripes and
+   the numbered 8 read from the art itself. */
+.ball-dot {
+    width: 26px;
+    height: 26px;
+    border-radius: 13px;
+    margin: 3px 6px 0 0;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.ball-dot--1 { background-image: resource("Sprites/Ball_01"); }
+.ball-dot--2 { background-image: resource("Sprites/Ball_02"); }
+.ball-dot--3 { background-image: resource("Sprites/Ball_03"); }
+.ball-dot--4 { background-image: resource("Sprites/Ball_04"); }
+.ball-dot--5 { background-image: resource("Sprites/Ball_05"); }
+.ball-dot--6 { background-image: resource("Sprites/Ball_06"); }
+.ball-dot--7 { background-image: resource("Sprites/Ball_07"); }
+.ball-dot--8 { background-image: resource("Sprites/Ball_08"); }
+.ball-dot--9 { background-image: resource("Sprites/Ball_09"); }
+.ball-dot--10 { background-image: resource("Sprites/Ball_10"); }
+.ball-dot--11 { background-image: resource("Sprites/Ball_11"); }
+.ball-dot--12 { background-image: resource("Sprites/Ball_12"); }
+.ball-dot--13 { background-image: resource("Sprites/Ball_13"); }
+.ball-dot--14 { background-image: resource("Sprites/Ball_14"); }
+.ball-dot--15 { background-image: resource("Sprites/Ball_15"); }
+
+/* ── Turn-change banner (absolute overlay) ───────────────────── */
+
+.turn-banner {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 36%;
+    -unity-text-align: middle-center;
+    font-size: 56px;
+    -unity-font-style: bold;
+    color: white;
+    -unity-text-outline-width: 3px;
+    -unity-text-outline-color: rgba(0, 0, 0, 0.55);
+    transition-property: opacity, scale;
+    transition-duration: 0.35s;
+}
+
+.turn-banner--hidden {
+    display: none;
+}
+
+/* Set when the banner should start dissolving out */
+.turn-banner--fading {
+    opacity: 0;
+    scale: 1.15 1.15;
+}
+
+.turn-banner--p1 {
+    color: rgb(245, 195, 65);
+}
+
+.turn-banner--p2 {
+    color: rgb(95, 170, 255);
+}
+
+/* ── Denied-shoot hint (absolute overlay) ───────────────────── */
+
+/* Shown when the player taps the shoot button while it is still red.
+   GameplayUIController flashes it above the bottom bar and shakes the button. */
+.shoot-hint {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 132px;
+    -unity-text-align: middle-center;
+    font-size: 24px;
+    -unity-font-style: bold;
+    color: white;
+    -unity-text-outline-width: 3px;
+    -unity-text-outline-color: rgba(0, 0, 0, 0.55);
+    transition-property: opacity;
+    transition-duration: 0.3s;
+}
+
+.shoot-hint--hidden {
+    display: none;
+}
+
+/* Set when the hint should start dissolving out */
+.shoot-hint--fading {
+    opacity: 0;
+}
+
+/* ── Game-over overlay (absolute, full screen) ──────────────── */
+
+/* Shown when a rule ends the match. GameplayUIController shows it with the
+   winner's colour and hides the input HUD behind it. */
+.game-over {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    align-items: center;
+    justify-content: center;
+}
+
+.game-over--hidden {
+    display: none;
+}
+
+.game-over-panel {
+    align-items: center;
+    background-color: rgba(15, 15, 15, 0.85);
+    border-radius: 24px;
+    border-width: 2px;
+    border-color: rgba(255, 255, 255, 0.15);
+    padding: 40px 56px;
+}
+
+.game-over-title {
+    font-size: 52px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    color: white;
+}
+
+.game-over-title--p1 {
+    color: rgb(245, 195, 65);
+}
+
+.game-over-title--p2 {
+    color: rgb(95, 170, 255);
+}
+
+.game-over-buttons {
+    flex-direction: row;
+    margin-top: 28px;
+}
+
+.game-over-button {
+    font-size: 24px;
+    -unity-font-style: bold;
+    color: white;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 32px;
+    border-width: 3px;
+    border-color: rgb(70, 200, 90);
+    padding: 12px 32px;
+    margin: 0 8px;
+}
+
+.game-over-button:hover {
+    border-color: rgba(255, 255, 255, 0.6);
 }
 
 /* ── Compact spin button (always-visible cue ball) ──────────── */

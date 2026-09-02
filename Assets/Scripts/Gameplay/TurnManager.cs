@@ -4,12 +4,11 @@ using UnityEngine;
 namespace EightBall.Gameplay
 {
     /// <summary>
-    /// Pass-and-play turn flow: once the table has settled after a shot, the current
-    /// player's turn ends and the other player's begins. No rules yet — every settled
-    /// shot hands over unconditionally; fouls, groups, and win/loss belong to the
-    /// later rules phase and will replace the unconditional hand-over.
+    /// Pass-and-play turn flow. The rules layer decides who plays next and applies the
+    /// decision through <see cref="BeginTurn"/>; this class only tracks the current player
+    /// and announces the change. Rules components live alongside on the Table object
+    /// (see <c>EightBall.Rules.RulesController</c>).
     /// </summary>
-    [RequireComponent(typeof(CueController))]
     public class TurnManager : MonoBehaviour
     {
         public const int PlayerCount = 2;
@@ -22,26 +21,13 @@ namespace EightBall.Gameplay
         /// <summary>Raised when a turn has ended and the next player's turn starts.</summary>
         public event Action<int> OnTurnStarted;
 
-        private CueController _cueController;
-
-        private void Awake()
+        /// <summary>
+        /// Hands the turn to <paramref name="playerIndex"/> and announces it. Called by
+        /// <c>RulesController</c> after the rules have evaluated the settled shot.
+        /// </summary>
+        public void BeginTurn(int playerIndex)
         {
-            _cueController = GetComponent<CueController>();
-        }
-
-        private void OnEnable()
-        {
-            _cueController.OnTableSettled += HandleTableSettled;
-        }
-
-        private void OnDisable()
-        {
-            _cueController.OnTableSettled -= HandleTableSettled;
-        }
-
-        private void HandleTableSettled()
-        {
-            CurrentPlayerIndex = (CurrentPlayerIndex + 1) % PlayerCount;
+            CurrentPlayerIndex = playerIndex;
             OnTurnStarted?.Invoke(CurrentPlayerIndex);
         }
     }

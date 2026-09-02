@@ -24,6 +24,9 @@ namespace EightBall.Gameplay
         /// <summary>Raised on the step where the last moving ball comes to rest after a shot.</summary>
         public event Action OnTableSettled;
 
+        /// <summary>Raised when a shot has been accepted and the balls are set in motion.</summary>
+        public event Action OnShotStarted;
+
         private TableSetup _tableSetup;
         private readonly List<Ball> _balls = new List<Ball>(16);
 
@@ -58,6 +61,7 @@ namespace EightBall.Gameplay
 
             cueBall.Launch(direction, SpeedForPower(power));
             IsTableSettled = false;
+            OnShotStarted?.Invoke();
             return true;
         }
 
@@ -71,7 +75,6 @@ namespace EightBall.Gameplay
         {
             if (IsTableSettled || AnyBallMoving()) return;
 
-            ReturnScratchedCueBall();
             StabilizeBalls();
             ClearCueBallSpin();
 
@@ -86,19 +89,6 @@ namespace EightBall.Gameplay
             {
                 if (ball != null) ball.Stabilize();
             }
-        }
-
-        /// <summary>
-        /// Interim scratch handling: a pocketed cue ball comes back on the head spot so play can
-        /// continue. The foul itself, and ball-in-hand placement, belong to the Phase 4 rules work.
-        /// </summary>
-        private void ReturnScratchedCueBall()
-        {
-            Ball cueBall = GetCueBall();
-            if (cueBall == null || !cueBall.IsPocketed) return;
-
-            cueBall.Restore();
-            cueBall.transform.localPosition = TableLayout.HeadSpot;
         }
 
         /// <summary>Any spin left over must not leak into the next shot.</summary>

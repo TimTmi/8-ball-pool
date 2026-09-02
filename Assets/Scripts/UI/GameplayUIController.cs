@@ -1,5 +1,8 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 
 namespace EightBall.UI
@@ -28,8 +31,18 @@ namespace EightBall.UI
         private bool _isShootUnlocked;
         private Button _lockAimButton;
         private Button _lockPowerButton;
-        private Label _turnLabel;
+        private VisualElement[] _playerPanels;
+        private VisualElement[] _playerBallRows;
+        private Label[] _playerOpenLabels;
+        private Label _turnBanner;
         private VisualElement _bottomBar;
+        private Label _shootHint;
+
+        // Game-over overlay
+        private VisualElement _gameOver;
+        private Label _gameOverTitle;
+        private Button _gameOverPlayAgain;
+        private Button _gameOverMenu;
 
         // Compact cue ball button
         private VisualElement _spinButton;
@@ -47,11 +60,28 @@ namespace EightBall.UI
 
         private bool _panelOpen;
         private bool _isDraggingHitPoint;
+        private Coroutine _turnBannerRoutine;
+        private Coroutine _shootDenyRoutine;
 
         // ── Half-size constants (pixels) for indicator placement ──────
         private const float ButtonDotHalf = 7f;   // half of 14px dot
         private const float HitDotHalf = 11f;     // half of 22px dot
         private const string LockedClass = "hud-button--locked";
+        private const string TurnHiddenClass = "turn-banner--hidden";
+        private const string TurnFadingClass = "turn-banner--fading";
+        private const string PanelActiveClass = "player-panel--active";
+        private const string PanelPulseClass = "player-panel--pulse";
+        // How long the banner stays fully visible before dissolving (seconds)
+        private const float TurnBannerHoldDuration = 1.1f;
+        private const string ShootHintHiddenClass = "shoot-hint--hidden";
+        private const string ShootHintFadingClass = "shoot-hint--fading";
+        // How long the denied-shoot hint stays fully visible before dissolving (seconds)
+        private const float ShootHintHoldDuration = 1.2f;
+        private const string DefaultShootHintText = "Drag back from the cue ball to set power";
+        private const string GameOverHiddenClass = "game-over--hidden";
+        private const float ShootShakeAmplitude = 8f;
+        private const int ShootShakeHalfCycles = 4;
+        private const float ShootShakeHalfCycleDuration = 0.05f;
 
         // ── Lifecycle ─────────────────────────────────────────────────
 
@@ -67,8 +97,11 @@ namespace EightBall.UI
             BindLockButtons();
             BindSpinButton();
             BindSpinPanel();
-            _turnLabel = _root.Q<Label>("player-turn-label");
+            BindGameOverOverlay();
+            BindPlayerPanels();
+            _turnBanner = _root.Q<Label>("turn-banner");
             _bottomBar = _root.Q<VisualElement>("bottom-bar");
+            _shootHint = _root.Q<Label>("shoot-hint");
         }
 
         private void OnDisable()
@@ -99,7 +132,52 @@ namespace EightBall.UI
                 _root.UnregisterCallback<PointerUpEvent>(OnRootPointerReleased, TrickleDown.TrickleDown);
                 _root.UnregisterCallback<PointerCancelEvent>(OnRootPointerReleased, TrickleDown.TrickleDown);
             }
+
+            if (_gameOverPlayAgain != null)
+                _gameOverPlayAgain.clicked -= OnPlayAgainClicked;
+
+            if (_gameOverMenu != null)
+                _gameOverMenu.clicked -= OnMenuClicked;
+
+            HideShootDeniedFeedback();
         }
+
+        /// <summary>Sets the denied-shoot hint's text; null restores the default power hint.</summary>
+        public void SetShootDeniedHint(string text)
+        {
+            if (_shootHint != null)
+                _shootHint.text = text ?? DefaultShootHintText;
+        }
+
+        /// <summary>Shows the full-screen game-over overlay with the winner's colour.</summary>
+        public void ShowGameOver(int winnerIndex, string winnerName)
+        {
+            if (_gameOver == null) return;
+
+            if (_gameOverTitle != null)
+            {
+                _gameOverTitle.text = $"{winnerName} Wins!";
+                _gameOverTitle.EnableInClassList("game-over-title--p1", winnerIndex == 0);
+                _gameOverTitle.EnableInClassList("game-over-title--p2", winnerIndex == 1);
+            }
+
+            _gameOver.RemoveFromClassList(GameOverHiddenClass);
+        }
+
+        private void BindGameOverOverlay()
+        {
+            _gameOver = _root.Q<VisualElement>("game-over");
+            _gameOverTitle = _root.Q<Label>("game-over-title");
+            _gameOverPlayAgain = _root.Q<Button>("game-over-play-again");
+            _gameOverMenu = _root.Q<Button>("game-over-menu");
+
+            if (_gameOverPlayAgain != null) _gameOverPlayAgain.clicked += OnPlayAgainClicked;
+            if (_gameOverMenu != null) _gameOverMenu.clicked += OnMenuClicked;
+        }
+
+        private void OnPlayAgainClicked() => SceneManager.LoadScene("Gameplay");
+
+        private void OnMenuClicked() => SceneManager.LoadScene("MainMenu");
 
         // ── Binding helpers ───────────────────────────────────────────
 
@@ -130,7 +208,7 @@ namespace EightBall.UI
 
         /// <summary>
         /// Shows or hides the interactive input HUD (lock toggles, shoot button, spin
-        /// button). The turn label stays visible. Hiding also closes the spin panel.
+        /// button). The player panels stay visible. Hiding also closes the spin panel.
         /// </summary>
         public void SetInputHudVisible(bool visible)
         {
@@ -142,13 +220,92 @@ namespace EightBall.UI
             if (!visible)
             {
                 SetPanelOpen(false);
+                HideShootDeniedFeedback();
             }
         }
 
-        /// <summary>Sets the top-bar label naming the player whose turn it is.</summary>
-        public void SetTurnLabelText(string text)
+        /// <summary>
+        /// Announces a turn change: lights the new player's panel, pulses it, and flashes
+        /// a centre-screen banner with the player's name that fades out.
+        /// </summary>
+        public void SetTurnPlayer(int playerIndex, string playerName)
         {
-            if (_turnLabel != null) _turnLabel.text = text;
+            if (_playerPanels == null) return;
+
+            for (int i = 0; i < _playerPanels.Length; i++)
+                _playerPanels[i]?.EnableInClassList(PanelActiveClass, i == playerIndex);
+
+            if (_turnBanner != null)
+            {
+                _turnBanner.text = $"{playerName}'s Turn";
+                _turnBanner.EnableInClassList("turn-banner--p1", playerIndex == 0);
+                _turnBanner.EnableInClassList("turn-banner--p2", playerIndex == 1);
+                _turnBanner.RemoveFromClassList(TurnFadingClass);
+                _turnBanner.RemoveFromClassList(TurnHiddenClass);
+            }
+
+            if (_turnBannerRoutine != null) StopCoroutine(_turnBannerRoutine);
+            _turnBannerRoutine = StartCoroutine(TurnChangeRoutine(playerIndex));
+        }
+
+        /// <summary>Pulses the active player's panel and shows the banner, then dissolves it out.</summary>
+        private IEnumerator TurnChangeRoutine(int playerIndex)
+        {
+            VisualElement panel = _playerPanels[playerIndex];
+            panel?.AddToClassList(PanelPulseClass);
+            yield return new WaitForSeconds(0.25f);
+            panel?.RemoveFromClassList(PanelPulseClass);
+
+            yield return new WaitForSeconds(TurnBannerHoldDuration);
+
+            if (_turnBanner != null)
+            {
+                _turnBanner.AddToClassList(TurnFadingClass);
+                yield return new WaitForSeconds(0.4f);
+                _turnBanner.AddToClassList(TurnHiddenClass);
+                _turnBanner.RemoveFromClassList(TurnFadingClass);
+            }
+        }
+
+        /// <summary>
+        /// Shows one player's remaining balls as dot sprites of the balls they still owe.
+        /// While the table is open (no group assigned) an "Open table" note stands in for
+        /// the dots; once a player's whole group is down, only the 8 is shown.
+        /// </summary>
+        public void SetPlayerPanel(int playerIndex, bool isOpen, IReadOnlyList<int> remainingBalls)
+        {
+            if (_playerBallRows == null) return;
+
+            VisualElement row = _playerBallRows[playerIndex];
+            Label openLabel = _playerOpenLabels[playerIndex];
+            if (row == null) return;
+
+            if (openLabel != null) openLabel.style.display = isOpen ? DisplayStyle.Flex : DisplayStyle.None;
+            row.style.display = isOpen ? DisplayStyle.None : DisplayStyle.Flex;
+            if (isOpen) return;
+
+            row.Clear();
+            foreach (int ballNumber in remainingBalls)
+            {
+                var dot = new VisualElement();
+                dot.AddToClassList("ball-dot");
+                dot.AddToClassList($"ball-dot--{ballNumber}");
+                row.Add(dot);
+            }
+        }
+
+        private void BindPlayerPanels()
+        {
+            _playerPanels = new VisualElement[2];
+            _playerBallRows = new VisualElement[2];
+            _playerOpenLabels = new Label[2];
+
+            for (int i = 0; i < 2; i++)
+            {
+                _playerPanels[i] = _root.Q<VisualElement>($"player-panel-{i}");
+                _playerBallRows[i] = _root.Q<VisualElement>($"player-panel-balls-{i}");
+                _playerOpenLabels[i] = _root.Q<Label>($"player-panel-open-{i}");
+            }
         }
 
         private void BindLockButtons()
@@ -385,10 +542,76 @@ namespace EightBall.UI
 
         private void OnShootClicked()
         {
-            if (!_isShootUnlocked) return;
+            if (!_isShootUnlocked)
+            {
+                ShowShootDeniedFeedback();
+                return;
+            }
 
             OnShootEvent?.Invoke();
             SetShootButtonUnlocked(false);
+        }
+
+        // ── Denied-shoot feedback ─────────────────────────────────────
+
+        /// <summary>
+        /// Feedback for tapping the shoot button while it is locked (power not set):
+        /// shakes the red button, then flashes the shoot-hint label above the bottom bar.
+        /// </summary>
+        private void ShowShootDeniedFeedback()
+        {
+            if (_shootDenyRoutine != null) StopCoroutine(_shootDenyRoutine);
+            _shootDenyRoutine = StartCoroutine(ShootDeniedRoutine());
+        }
+
+        /// <summary>Reverts a running denied-feedback display to its hidden rest state.</summary>
+        private void HideShootDeniedFeedback()
+        {
+            if (_shootDenyRoutine != null)
+            {
+                StopCoroutine(_shootDenyRoutine);
+                _shootDenyRoutine = null;
+            }
+
+            if (_shootButton != null)
+                _shootButton.style.translate = new Translate(0f, 0f, 0f);
+
+            if (_shootHint != null)
+            {
+                _shootHint.AddToClassList(ShootHintHiddenClass);
+                _shootHint.RemoveFromClassList(ShootHintFadingClass);
+            }
+        }
+
+        private IEnumerator ShootDeniedRoutine()
+        {
+            // Horizontal shake so the tap reads as "denied", not as a dead button
+            if (_shootButton != null)
+            {
+                for (int i = 0; i < ShootShakeHalfCycles; i++)
+                {
+                    float direction = (i % 2 == 0) ? 1f : -1f;
+                    _shootButton.style.translate = new Translate(ShootShakeAmplitude * direction, 0f, 0f);
+                    yield return new WaitForSeconds(ShootShakeHalfCycleDuration);
+                }
+                _shootButton.style.translate = new Translate(0f, 0f, 0f);
+            }
+
+            if (_shootHint != null)
+            {
+                _shootHint.RemoveFromClassList(ShootHintFadingClass);
+                _shootHint.RemoveFromClassList(ShootHintHiddenClass);
+            }
+
+            yield return new WaitForSeconds(ShootHintHoldDuration);
+
+            if (_shootHint != null)
+            {
+                _shootHint.AddToClassList(ShootHintFadingClass);
+                yield return new WaitForSeconds(0.3f);
+                _shootHint.AddToClassList(ShootHintHiddenClass);
+                _shootHint.RemoveFromClassList(ShootHintFadingClass);
+            }
         }
     }
 }
