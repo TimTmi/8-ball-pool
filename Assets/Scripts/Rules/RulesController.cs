@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using EightBall.Audio;
 using UnityEngine;
 using EightBall.Gameplay;
 
@@ -137,6 +138,7 @@ namespace EightBall.Rules
                 _state.IsGameOver = true;
                 _state.WinnerIndex = findings.WinnerIndex;
                 IsGameOver = true;
+                SfxManager.Play("Cheering");
                 OnGameOver?.Invoke(findings.WinnerIndex);
                 return;
             }
@@ -157,6 +159,9 @@ namespace EightBall.Rules
         /// <summary>Gives the player ball in hand: the cue ball comes back on the head spot and must be placed.</summary>
         private void BeginBallInHand(int playerIndex)
         {
+            // Only a rule that hands out a foul reaches this, so the sound follows the rules set
+            SfxManager.Play("Foul");
+
             Ball cueBall = GetCueBall();
             if (cueBall != null)
             {

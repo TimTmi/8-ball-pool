@@ -95,6 +95,7 @@ namespace EightBall.Gameplay
 
             IsPocketed = true;
             OnPocketed?.Invoke(this);
+            SfxManager.Play("Pocket");
             StopImmediately();
             SetPhysicsActive(false);
 
