@@ -25,6 +25,7 @@ namespace EightBall.Editor
             GeneratePocket();
             GenerateCueBall();
             GenerateBalls();
+            GenerateBallSurfaceMaps();
             GenerateCueStick();
             GenerateHudIcons();
 
@@ -116,31 +117,137 @@ namespace EightBall.Editor
         }
 
         // ── 15 pool balls ─────────────────────────────────────────────────────
+
+        private static readonly Color32[] BallColors =
+        {
+            new Color32(240, 180, 0,   255),
+            new Color32(20,  60,  200, 255),
+            new Color32(200, 30,  30,  255),
+            new Color32(130, 40,  160, 255),
+            new Color32(220, 100, 0,   255),
+            new Color32(30,  140, 30,  255),
+            new Color32(140, 30,  30,  255),
+            new Color32(15,  15,  15,  255),
+            new Color32(240, 180, 0,   255),
+            new Color32(20,  60,  200, 255),
+            new Color32(200, 30,  30,  255),
+            new Color32(130, 40,  160, 255),
+            new Color32(220, 100, 0,   255),
+            new Color32(30,  140, 30,  255),
+            new Color32(140, 30,  30,  255),
+        };
+
         private static void GenerateBalls()
         {
-            Color32[] colors = {
-                new Color32(240, 180, 0,   255),
-                new Color32(20,  60,  200, 255),
-                new Color32(200, 30,  30,  255),
-                new Color32(130, 40,  160, 255),
-                new Color32(220, 100, 0,   255),
-                new Color32(30,  140, 30,  255),
-                new Color32(140, 30,  30,  255),
-                new Color32(15,  15,  15,  255),
-                new Color32(240, 180, 0,   255),
-                new Color32(20,  60,  200, 255),
-                new Color32(200, 30,  30,  255),
-                new Color32(130, 40,  160, 255),
-                new Color32(220, 100, 0,   255),
-                new Color32(30,  140, 30,  255),
-                new Color32(140, 30,  30,  255),
-            };
+            for (int i = 0; i < 15; i++)
+            {
+                bool isStripe = i >= 8;
+                var tex = CreateBallTexture(64, BallColors[i], i + 1, isStripe);
+                SavePng(tex, string.Format("Ball_{0:00}", i + 1));
+            }
+        }
+
+        // ── Ball surface maps: equirectangular maps for the fake-sphere shader ─
+        // The flat Ball_XX sprite stays on the SpriteRenderer as the quad/UV
+        // provider; the shader samples these maps through the ball orientation.
+
+        private const int MapWidth = 256;
+        private const int MapHeight = 128;
+
+        private static void GenerateBallSurfaceMaps()
+        {
+            GenerateBallSurfaceMap("BallMap_Cue", Color.white, 0, false);
 
             for (int i = 0; i < 15; i++)
             {
                 bool isStripe = i >= 8;
-                var tex = CreateBallTexture(64, colors[i], i + 1, isStripe);
-                SavePng(tex, string.Format("Ball_{0:00}", i + 1));
+                GenerateBallSurfaceMap(string.Format("BallMap_{0:00}", i + 1), BallColors[i], i + 1, isStripe);
+            }
+        }
+
+        private static void GenerateBallSurfaceMap(string name, Color32 baseColor, int number, bool isStripe)
+        {
+            var tex = new Texture2D(MapWidth, MapHeight, TextureFormat.RGBA32, false);
+            Fill(tex, isStripe ? Color.white : (Color)baseColor);
+
+            if (isStripe)
+            {
+                // The flat sprite's band covers half the disc radius; in orthographic
+                // projection that is ±30° of latitude, i.e. one sixth of the map height.
+                int bandHalf = MapHeight / 6;
+                for (int y = MapHeight / 2 - bandHalf; y <= MapHeight / 2 + bandHalf; y++)
+                {
+                    for (int x = 0; x < MapWidth; x++)
+                        tex.SetPixel(x, y, baseColor);
+                }
+            }
+
+            if (number > 0)
+            {
+                // Two patches on opposite longitudes, as on real balls. On a 2:1 map one
+                // degree of longitude and latitude are the same pixel length, so a patch of
+                // angular radius φ is a true circle of φ·H/180 pixels.
+                int patchRadius = AngularPixels(19.5f);
+                DrawNumberPatch(tex, MapWidth / 4, MapHeight / 2, patchRadius, number);
+                DrawNumberPatch(tex, 3 * MapWidth / 4, MapHeight / 2, patchRadius, number);
+            }
+
+            tex.Apply();
+            SavePng(tex, name);
+        }
+
+        private static int AngularPixels(float degrees)
+        {
+            return Mathf.RoundToInt(degrees * MapHeight / 180f);
+        }
+
+        private static void DrawNumberPatch(Texture2D tex, int cx, int cy, int radius, int number)
+        {
+            DrawFilledCircle(tex, cx, cy, radius, Color.white);
+            // DrawNumber(tex, cx, cy, number);
+        }
+
+        // Minimal 3x5 bitmap digits, one 15-char row per glyph line.
+        private static readonly string[] DigitGlyphs =
+        {
+            "111101101101111", // 0
+            "010110010010111", // 1
+            "111001111100111", // 2
+            "111001111001111", // 3
+            "101101111001001", // 4
+            "111100111001111", // 5
+            "111100111101111", // 6
+            "111001001001001", // 7
+            "111101111101111", // 8
+            "111101111001111", // 9
+        };
+
+        private static void DrawNumber(Texture2D tex, int cx, int cy, int number)
+        {
+            string digits = number.ToString();
+            const int Scale = 2;
+            int glyphW = 3 * Scale, glyphH = 5 * Scale, gap = Scale;
+            int totalW = digits.Length * glyphW + (digits.Length - 1) * gap;
+            int x0 = cx - totalW / 2;
+            int y0 = cy - glyphH / 2;
+            var ink = new Color32(20, 20, 20, 255);
+
+            for (int d = 0; d < digits.Length; d++)
+            {
+                string glyph = DigitGlyphs[digits[d] - '0'];
+                for (int gy = 0; gy < 5; gy++)
+                {
+                    for (int gx = 0; gx < 3; gx++)
+                    {
+                        if (glyph[gy * 3 + gx] != '1') continue;
+
+                        for (int py = 0; py < glyphH; py++)
+                        {
+                            for (int px = 0; px < glyphW; px++)
+                                tex.SetPixel(x0 + d * (glyphW + gap) + gx * glyphW + px, y0 + gy * glyphH + py, ink);
+                        }
+                    }
+                }
             }
         }
 
@@ -418,10 +525,24 @@ namespace EightBall.Editor
                 var importer = AssetImporter.GetAtPath(path) as TextureImporter;
                 if (importer == null) continue;
 
+                importer.filterMode = FilterMode.Bilinear;
+
+                if (path.Contains("BallMap"))
+                {
+                    // Data texture for the fake-sphere shader, not a Sprite. U repeats so
+                    // the longitude seam is invisible; V clamps at the poles; mipmaps
+                    // because the map is minified when the sphere curvature compresses it.
+                    importer.textureType = TextureImporterType.Default;
+                    importer.wrapModeU = TextureWrapMode.Repeat;
+                    importer.wrapModeV = TextureWrapMode.Clamp;
+                    importer.mipmapEnabled = true;
+                    importer.SaveAndReimport();
+                    continue;
+                }
+
                 importer.textureType = TextureImporterType.Sprite;
                 importer.spriteImportMode = SpriteImportMode.Single;
                 importer.alphaIsTransparency = true;
-                importer.filterMode = FilterMode.Bilinear;
                 importer.mipmapEnabled = false;
 
                 if (path.Contains("TableFelt"))
