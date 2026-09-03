@@ -1,6 +1,6 @@
 .main-container {
     flex-grow: 1;
-    background-color: rgb(34, 139, 34); /* Pool table green */
+    background-color: rgb(34, 139, 34);
 }
 
 .view-container {
@@ -40,8 +40,6 @@
     -unity-font-style: bold;
 }
 
-/* ── Rules modal (opened by the Play button, on top of the menu) ── */
-
 .modal-backdrop {
     position: absolute;
     left: 0;
@@ -55,7 +53,7 @@
 
 .modal-panel {
     width: 720px;
-    background-color: rgba(15, 15, 15, 0.85);
+    background-color: rgba(15, 15, 15, 0.961);
     border-radius: 24px;
     border-width: 2px;
     border-color: rgba(255, 255, 255, 0.15);
