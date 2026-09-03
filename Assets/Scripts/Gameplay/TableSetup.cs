@@ -28,6 +28,12 @@ namespace EightBall.Gameplay
         [SerializeField] private PhysicsMaterial2D _ballPhysicsMaterial;
         [SerializeField] private PhysicsMaterial2D _cushionPhysicsMaterial;
 
+        [Header("Ball Roll")]
+        [Tooltip("Fake-sphere shader for the ball sprites. Leave unset to look it up by name.")]
+        [SerializeField] private Shader _ballRollShader;
+
+        private static Material _ballRollMaterial;
+
         // References to spawned objects (accessible by gameplay systems)
         public GameObject CueBall    { get; private set; }
         public GameObject CueStick   { get; private set; }
@@ -333,6 +339,11 @@ namespace EightBall.Gameplay
                 rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
             }
 
+            // BallRoll owns all rotation now, so the flat sprite must not spin in-plane
+            // from collision impulses on top of it.
+            var body = go.GetComponent<Rigidbody2D>();
+            if (body != null) body.freezeRotation = true;
+
             go.transform.localPosition = localPosition;
 
             Sprite sprite = GetBallSprite(ballNumber);
@@ -344,6 +355,7 @@ namespace EightBall.Gameplay
             {
                 sr.sprite = sprite;
                 sr.sortingOrder = 0;
+                if (BallRollMaterial != null) sr.sharedMaterial = BallRollMaterial;
             }
 
             var col = go.GetComponent<CircleCollider2D>();
@@ -361,6 +373,12 @@ namespace EightBall.Gameplay
             // Only the cue ball carries spin.
             if (ballNumber == 0 && go.GetComponent<CueBallSpin>() == null) go.AddComponent<CueBallSpin>();
 
+            // Pseudo-3D roll: the sprite quad renders the surface map through the ball's
+            // orientation, which BallRoll integrates from the physics velocity and spin.
+            var roll = go.GetComponent<BallRoll>();
+            if (roll == null) roll = go.AddComponent<BallRoll>();
+            roll.Setup(GetBallSurfaceMap(ballNumber));
+
             go.tag = ballNumber == 0 ? "CueBall" : "Ball";
 
             return go;
@@ -375,6 +393,28 @@ namespace EightBall.Gameplay
             // Fall back to runtime load
             string spriteName = ballNumber == 0 ? "Ball_Cue" : $"Ball_{ballNumber:00}";
             return LoadSprite(spriteName);
+        }
+
+        private Texture2D GetBallSurfaceMap(int ballNumber)
+        {
+            string mapName = ballNumber == 0 ? "BallMap_Cue" : $"BallMap_{ballNumber:00}";
+            return Resources.Load<Texture2D>($"Sprites/{mapName}");
+        }
+
+        /// <summary>One shared fake-sphere material; per-ball state (map, orientation) goes
+        /// through a MaterialPropertyBlock on each renderer, not through material variants.</summary>
+        private Material BallRollMaterial
+        {
+            get
+            {
+                if (_ballRollMaterial == null)
+                {
+                    var shader = _ballRollShader != null ? _ballRollShader : Shader.Find("EightBall/BallRoll");
+                    if (shader != null) _ballRollMaterial = new Material(shader);
+                }
+
+                return _ballRollMaterial;
+            }
         }
 
         // ── Cue Stick ─────────────────────────────────────────────────────────
