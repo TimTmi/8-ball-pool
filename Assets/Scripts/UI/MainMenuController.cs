@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEngine.SceneManagement;
@@ -12,6 +13,8 @@ namespace EightBall.UI
         private VisualElement _creditsView;
         private VisualElement _rulesModal;
         private VisualElement _rulesList;
+        private VisualElement _titleBall;
+        private Coroutine _menuPulseRoutine;
 
         private Button _playButton;
         private Button _creditsButton;
@@ -48,6 +51,9 @@ namespace EightBall.UI
             if (_creditsBackButton != null) _creditsBackButton.clicked += OnCreditsBackClicked;
 
             BuildRulesList();
+
+            _titleBall = root.Q<VisualElement>("title-ball");
+            // StartMenuPulse();
         }
 
         private void OnDisable()
@@ -58,6 +64,37 @@ namespace EightBall.UI
             if (_startButton != null) _startButton.clicked -= OnStartClicked;
             if (_rulesBackButton != null) _rulesBackButton.clicked -= OnRulesBackClicked;
             if (_creditsBackButton != null) _creditsBackButton.clicked -= OnCreditsBackClicked;
+
+            StopMenuPulse();
+        }
+
+        /// <summary>Gently pulses the Play button (and the title ball, when present) so
+        /// the menu feels alive on touch devices, where hover styles never fire. The USS
+        /// transitions on .menu-button / .title-ball smooth each toggle.</summary>
+        private void StartMenuPulse()
+        {
+            if (_playButton == null) return;
+            _menuPulseRoutine = StartCoroutine(MenuPulseRoutine());
+        }
+
+        private void StopMenuPulse()
+        {
+            if (_menuPulseRoutine == null) return;
+            StopCoroutine(_menuPulseRoutine);
+            _menuPulseRoutine = null;
+        }
+
+        private IEnumerator MenuPulseRoutine()
+        {
+            var hold = new WaitForSeconds(0.9f);
+            bool raised = false;
+            while (true)
+            {
+                raised = !raised;
+                _playButton.style.scale = new Scale(raised ? new Vector3(1.03f, 1.03f, 1f) : Vector3.one);
+                if (_titleBall != null) _titleBall.style.translate = new Translate(0, raised ? -8f : 0f, 0);
+                yield return hold;
+            }
         }
 
         private void OnPlayClicked()

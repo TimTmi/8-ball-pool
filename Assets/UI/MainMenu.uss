@@ -1,6 +1,121 @@
 .main-container {
     flex-grow: 1;
-    background-color: rgb(34, 139, 34);
+    background-color: rgb(16, 45, 28);
+}
+
+.backdrop {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+}
+
+.glow-ring {
+    position: absolute;
+    border-radius: 500px;
+    border-width: 2px;
+    border-color: rgba(255, 255, 255, 0.05);
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+.glow-ring--large {
+    width: 900px;
+    height: 900px;
+    top: -320px;
+    right: -260px;
+}
+
+.glow-ring--small {
+    width: 520px;
+    height: 520px;
+    bottom: -180px;
+    left: -160px;
+}
+
+.rack {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 20px;
+    align-items: center;
+    opacity: 0.95;
+    display: none;
+}
+
+.rack-row {
+    flex-direction: row;
+}
+
+.rack-row--rest {
+    margin-top: -10px;
+}
+
+.rack-ball {
+    width: 44px;
+    height: 44px;
+    margin: 0 1px;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.rack-ball--1 {
+    background-image: resource("Sprites/Ball_01");
+}
+
+.rack-ball--2 {
+    background-image: resource("Sprites/Ball_02");
+}
+
+.rack-ball--3 {
+    background-image: resource("Sprites/Ball_03");
+}
+
+.rack-ball--4 {
+    background-image: resource("Sprites/Ball_04");
+}
+
+.rack-ball--5 {
+    background-image: resource("Sprites/Ball_05");
+}
+
+.rack-ball--6 {
+    background-image: resource("Sprites/Ball_06");
+}
+
+.rack-ball--7 {
+    background-image: resource("Sprites/Ball_07");
+}
+
+.rack-ball--8 {
+    background-image: resource("Sprites/Ball_08");
+}
+
+.rack-ball--9 {
+    background-image: resource("Sprites/Ball_09");
+}
+
+.rack-ball--10 {
+    background-image: resource("Sprites/Ball_10");
+}
+
+.rack-ball--11 {
+    background-image: resource("Sprites/Ball_11");
+}
+
+.rack-ball--12 {
+    background-image: resource("Sprites/Ball_12");
+}
+
+.rack-ball--13 {
+    background-image: resource("Sprites/Ball_13");
+}
+
+.rack-ball--14 {
+    background-image: resource("Sprites/Ball_14");
+}
+
+.rack-ball--15 {
+    background-image: resource("Sprites/Ball_15");
 }
 
 .view-container {
@@ -12,32 +127,96 @@
     position: absolute;
 }
 
+.menu-view {
+    padding-bottom: 150px;
+}
+
+.title-block {
+    align-items: center;
+    margin-bottom: 56px;
+}
+
 .title-label {
-    font-size: 80px;
+    font-size: 68px;
     -unity-font-style: bold;
     color: white;
-    margin-bottom: 50px;
+    letter-spacing: 4px;
+    -unity-text-outline-width: 4px;
+    -unity-text-outline-color: rgba(0, 0, 0, 0.45);
+}
+
+.title-subtitle {
+    font-size: 22px;
+    color: rgba(255, 255, 255, 0.55);
+    letter-spacing: 8px;
+    margin-top: 12px;
+    display: none;
 }
 
 .menu-button {
-    font-size: 40px;
-    width: 300px;
-    height: 80px;
-    margin-bottom: 20px;
-    background-color: rgb(200, 200, 200);
-    border-radius: 10px;
-    color: black;
+    font-size: 32px;
+    -unity-font-style: bold;
+    width: 340px;
+    height: 84px;
+    margin-bottom: 18px;
+    background-color: rgba(0, 0, 0, 0.45);
+    border-radius: 42px;
+    border-width: 3px;
+    border-color: rgba(255, 255, 255, 0.18);
+    color: white;
+    letter-spacing: 2px;
+    transition-property: scale, background-color, border-color;
+    transition-duration: 0.15s;
 }
 
 .menu-button:hover {
-    background-color: white;
+    background-color: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.55);
+    scale: 1.04 1.04;
+}
+
+.menu-button:active {
+    scale: 0.97 0.97;
+}
+
+.menu-button--primary {
+    background-color: rgb(70, 200, 90);
+    border-color: rgb(70, 200, 90);
+    color: rgb(12, 32, 16);
+}
+
+.menu-button--primary:hover {
+    background-color: rgb(88, 218, 108);
+    border-color: rgb(88, 218, 108);
+}
+
+.credits-panel {
+    align-items: center;
+    background-color: rgba(15, 15, 15, 0.7);
+    border-radius: 24px;
+    border-width: 2px;
+    border-color: rgba(255, 255, 255, 0.15);
+    padding: 40px 64px;
+}
+
+.credits-title {
+    font-size: 48px;
+    -unity-font-style: bold;
+    color: white;
+    margin-bottom: 28px;
 }
 
 .credits-text {
-    font-size: 30px;
+    font-size: 28px;
     color: white;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
     -unity-font-style: bold;
+}
+
+.credits-back-button {
+    width: 260px;
+    margin-top: 32px;
+    margin-bottom: 0;
 }
 
 .modal-backdrop {

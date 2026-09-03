@@ -1,20 +1,56 @@
 <ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <Style src="project://database/Assets/UI/MainMenu.uss?fileID=7433441132597879392&amp;guid=16947e743f0301c3c8948972d9fad4e9&amp;type=3#MainMenu"/>
     <ui:VisualElement class="main-container">
-        <ui:VisualElement name="menu-view" class="view-container">
-            <ui:Label text="8 Ball Pool" class="title-label"/>
-            <ui:Button name="play-button" text="Play" class="menu-button"/>
+        <ui:VisualElement name="backdrop" picking-mode="Ignore">
+            <ui:VisualElement class="glow-ring glow-ring--large"/>
+            <ui:VisualElement class="glow-ring glow-ring--small"/>
+            <ui:VisualElement name="rack" class="rack">
+                <ui:VisualElement class="rack-row">
+                    <ui:VisualElement class="rack-ball rack-ball--1"/>
+                </ui:VisualElement>
+                <ui:VisualElement class="rack-row rack-row--rest">
+                    <ui:VisualElement class="rack-ball rack-ball--11"/>
+                    <ui:VisualElement class="rack-ball rack-ball--5"/>
+                </ui:VisualElement>
+                <ui:VisualElement class="rack-row rack-row--rest">
+                    <ui:VisualElement class="rack-ball rack-ball--2"/>
+                    <ui:VisualElement class="rack-ball rack-ball--8"/>
+                    <ui:VisualElement class="rack-ball rack-ball--10"/>
+                </ui:VisualElement>
+                <ui:VisualElement class="rack-row rack-row--rest">
+                    <ui:VisualElement class="rack-ball rack-ball--9"/>
+                    <ui:VisualElement class="rack-ball rack-ball--3"/>
+                    <ui:VisualElement class="rack-ball rack-ball--14"/>
+                    <ui:VisualElement class="rack-ball rack-ball--6"/>
+                </ui:VisualElement>
+                <ui:VisualElement class="rack-row rack-row--rest">
+                    <ui:VisualElement class="rack-ball rack-ball--12"/>
+                    <ui:VisualElement class="rack-ball rack-ball--4"/>
+                    <ui:VisualElement class="rack-ball rack-ball--13"/>
+                    <ui:VisualElement class="rack-ball rack-ball--7"/>
+                    <ui:VisualElement class="rack-ball rack-ball--15"/>
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="menu-view" class="view-container menu-view">
+            <ui:VisualElement name="title-block" class="title-block">
+                <ui:Label text="8 BALL POOL" class="title-label"/>
+                <ui:Label text="PASS &amp; PLAY" name="Label" class="title-subtitle"/>
+            </ui:VisualElement>
+            <ui:Button name="play-button" text="Play" class="menu-button menu-button--primary"/>
             <ui:Button name="credits-button" text="Credits" class="menu-button"/>
             <ui:Button name="quit-button" text="Quit" class="menu-button"/>
         </ui:VisualElement>
         <ui:VisualElement name="credits-view" class="view-container" style="display: none;">
-            <ui:Label text="Credits" class="title-label"/>
-            <ui:Label text="23127221    Nguyễn Tiến Luật" class="credits-text"/>
-            <ui:Label text="23127228    Phạm Văn Minh" class="credits-text"/>
-            <ui:Label text="23127281    Đặng Nghi Văn" class="credits-text"/>
-            <ui:Label text="23127395    Trần Anh Khoa" class="credits-text"/>
-            <ui:Label text="23127396    Lương Linh Khôi" class="credits-text"/>
-            <ui:Button name="back-button" text="Back" class="menu-button" style="margin-top: 40px;"/>
+            <ui:VisualElement class="credits-panel">
+                <ui:Label text="Credits" class="credits-title"/>
+                <ui:Label text="23127221    Nguyễn Tiến Luật" class="credits-text"/>
+                <ui:Label text="23127228    Phạm Văn Minh" class="credits-text"/>
+                <ui:Label text="23127281    Đặng Nghi Văn" class="credits-text"/>
+                <ui:Label text="23127395    Trần Anh Khoa" class="credits-text"/>
+                <ui:Label text="23127396    Lương Linh Khôi" class="credits-text"/>
+                <ui:Button name="back-button" text="Back" class="menu-button credits-back-button"/>
+            </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="rules-modal" class="modal-backdrop" style="display: none;">
             <ui:VisualElement name="rules-panel" class="modal-panel">
