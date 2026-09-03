@@ -26,6 +26,10 @@ namespace EightBall.Rules
         /// <summary>The match is over. Input and turn flow stop; the UI shows the result.</summary>
         public event Action<int> OnGameOver;
 
+        /// <summary>Raised when a placed cue ball is committed and live again. The frame the
+        /// camera needs depends on the cue ball's position, which moved since the turn began.</summary>
+        public event Action OnBallInHandCommitted;
+
         /// <summary>True once a rule has ended the match; input and further rules evaluation stop.</summary>
         public bool IsGameOver { get; private set; }
 
@@ -185,6 +189,7 @@ namespace EightBall.Rules
             if (cueBall != null) cueBall.SetPhysicsActive(true);
 
             SetCueBallTint(Color.white);
+            OnBallInHandCommitted?.Invoke();
         }
 
         /// <summary>

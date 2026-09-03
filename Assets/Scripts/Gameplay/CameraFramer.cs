@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using EightBall.Core;
+using EightBall.Rules;
 
 namespace EightBall.Gameplay
 {
@@ -21,6 +22,7 @@ namespace EightBall.Gameplay
         private TableSetup _tableSetup;
         private InputManager _inputManager;
         private TurnManager _turnManager;
+        private RulesController _rulesController;
         private Coroutine _tween;
 
         private void Start()
@@ -29,6 +31,7 @@ namespace EightBall.Gameplay
             _tableSetup = FindAnyObjectByType<TableSetup>();
             _inputManager = FindAnyObjectByType<InputManager>();
             _turnManager = FindAnyObjectByType<TurnManager>();
+            _rulesController = FindAnyObjectByType<RulesController>();
 
             if (_camera == null || _tableSetup == null || _inputManager == null)
             {
@@ -42,14 +45,20 @@ namespace EightBall.Gameplay
             else StartCoroutine(FrameOnceSpawned());
 
             if (_turnManager != null) _turnManager.OnTurnStarted += HandleTurnStarted;
+            if (_rulesController != null) _rulesController.OnBallInHandCommitted += HandleBallInHandCommitted;
         }
 
         private void OnDestroy()
         {
             if (_turnManager != null) _turnManager.OnTurnStarted -= HandleTurnStarted;
+            if (_rulesController != null) _rulesController.OnBallInHandCommitted -= HandleBallInHandCommitted;
         }
 
         private void HandleTurnStarted(int playerIndex) => Frame(animate: true);
+
+        /// <summary>The cue ball moved while the player carried it, so the full-power disc
+        /// (and therefore the frame) changed after this turn's OnTurnStarted framing.</summary>
+        private void HandleBallInHandCommitted() => Frame(animate: true);
 
         /// <summary>Falls back to the first frame when this Start runs before TableSetup
         /// has spawned the cue ball (script execution order is undefined between them).</summary>
