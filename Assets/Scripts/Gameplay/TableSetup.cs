@@ -1,3 +1,4 @@
+using EightBall.Audio;
 using UnityEngine;
 
 namespace EightBall.Gameplay
@@ -51,6 +52,7 @@ namespace EightBall.Gameplay
         /// <summary>Rebuilds the entire table layout (useful for re-rack).</summary>
         public void BuildTable()
         {
+            SetupSfx();
             SetupFelt();
             SetupRails();
             SetupPockets();
@@ -61,6 +63,11 @@ namespace EightBall.Gameplay
         }
 
         // ── Felt ──────────────────────────────────────────────────────────────
+
+        private void SetupSfx()
+        {
+            if (GetComponent<SfxManager>() == null) gameObject.AddComponent<SfxManager>();
+        }
 
         private void SetupFelt()
         {

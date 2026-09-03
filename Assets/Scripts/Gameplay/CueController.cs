@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using EightBall.Audio;
 using UnityEngine;
 
 namespace EightBall.Gameplay
@@ -11,6 +12,9 @@ namespace EightBall.Gameplay
     [RequireComponent(typeof(TableSetup))]
     public class CueController : MonoBehaviour
     {
+        /// <summary>Power at and above which the cue strike uses the strong sound.</summary>
+        private const float StrongStrikePower = 0.5f;
+
         [Header("Shot Speed (units/sec)")]
         [Tooltip("Cue ball speed at power 0 — a soft tap.")]
         [SerializeField] private float _minShotSpeed = 3f;
@@ -60,6 +64,7 @@ namespace EightBall.Gameplay
             if (cueBallSpin != null) cueBallSpin.SetSpin(spin);
 
             cueBall.Launch(direction, SpeedForPower(power));
+            SfxManager.Play(power >= StrongStrikePower ? "CueCollisionStrong" : "CueCollisionWeak");
             IsTableSettled = false;
             OnShotStarted?.Invoke();
             return true;

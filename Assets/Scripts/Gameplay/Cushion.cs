@@ -1,3 +1,4 @@
+using EightBall.Audio;
 using UnityEngine;
 
 namespace EightBall.Gameplay
@@ -17,6 +18,10 @@ namespace EightBall.Gameplay
 
         [Tooltip("Fraction of the sliding speed (along the rail) kept after a hit.")]
         [SerializeField, Range(0f, 1f)] private float _slideRetention = 0.95f;
+
+        // Thump volume ramps from silent to full across this impact-speed range (units/sec)
+        private const float MinImpactSpeed = 0.5f;
+        private const float MaxImpactSpeed = 10f;
 
         private void OnCollisionEnter2D(Collision2D collision)
         {
@@ -50,6 +55,9 @@ namespace EightBall.Gameplay
             }
 
             body.linearVelocity = rebound;
+
+            float volume = Mathf.Clamp01((reboundSpeed - MinImpactSpeed) / (MaxImpactSpeed - MinImpactSpeed));
+            if (volume > 0f) SfxManager.Play("CushionCollision", volume);
         }
     }
 }

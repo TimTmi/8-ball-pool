@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using EightBall.Audio;
 using UnityEngine;
 
 namespace EightBall.Gameplay
@@ -27,6 +28,10 @@ namespace EightBall.Gameplay
 
         private const float SinkDuration = 0.18f;
         private const float SinkEndScale = 0.25f;
+
+        // Click volume ramps from silent to full across this impact-speed range (units/sec)
+        private const float MinCollisionSpeed = 0.4f;
+        private const float MaxCollisionSpeed = 12f;
 
         public bool IsMoving { get; private set; }
 
@@ -90,6 +95,7 @@ namespace EightBall.Gameplay
 
             IsPocketed = true;
             OnPocketed?.Invoke(this);
+            SfxManager.Play("Pocket");
             StopImmediately();
             SetPhysicsActive(false);
 
@@ -143,6 +149,22 @@ namespace EightBall.Gameplay
             }
 
             if (IsMoving) StopImmediately();
+        }
+
+        /// <summary>Ball-to-ball click. Cushion hits are reported by <see cref="Cushion"/> instead,
+        /// so only contacts with another ball play a sound here.</summary>
+        private void OnCollisionEnter2D(Collision2D collision)
+        {
+            if (IsPocketed) return;
+
+            var otherBall = collision.collider.GetComponent<Ball>();
+            if (otherBall == null || otherBall.IsPocketed) return;
+
+            float speed = collision.relativeVelocity.magnitude;
+            float volume = Mathf.Clamp01((speed - MinCollisionSpeed) / (MaxCollisionSpeed - MinCollisionSpeed));
+            if (volume <= 0f) return;
+
+            SfxManager.Play("BallCollision", volume);
         }
 
         private bool HasLeftTheTable()

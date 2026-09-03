@@ -1,4 +1,5 @@
 using System;
+using EightBall.Audio;
 using UnityEngine;
 
 namespace EightBall.Gameplay
@@ -29,6 +30,7 @@ namespace EightBall.Gameplay
         {
             CurrentPlayerIndex = playerIndex;
             OnTurnStarted?.Invoke(CurrentPlayerIndex);
+            SfxManager.Play("YourTurn");
         }
     }
 }
