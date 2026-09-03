@@ -37,8 +37,15 @@ namespace EightBall.Gameplay
 
         private static readonly RaycastHit2D[] Hits = new RaycastHit2D[8];
 
-        /// <summary>Never varies: pockets are triggers and must not stop the line.</summary>
+        /// <summary>
+        /// Pockets must not stop the cast itself: a ball grazing the mouth rolls past. The walk
+        /// instead ends where <see cref="Pocket"/> would actually capture, checked after each step.
+        /// </summary>
         private static readonly ContactFilter2D CastFilter = new ContactFilter2D { useTriggers = false };
+
+        private static readonly ContactFilter2D PocketFilter = new ContactFilter2D { useTriggers = true };
+
+        private static readonly Collider2D[] PocketOverlaps = new Collider2D[4];
 
         /// <summary>Everything the prediction needs about the shot being lined up.</summary>
         public readonly struct Request
@@ -160,6 +167,19 @@ namespace EightBall.Gameplay
                 }
 
                 position += velocity * stepTime;
+
+                // Aiming into a pocket: the mouth has no collider, so without this the walk ran
+                // the line on through the hole and out the wooden rail. Stop where the ball sinks.
+                if (IsInPocketCapture(position))
+                {
+                    AddVertex(contacted ? cueAfterPath : approachPath, position, true);
+
+                    // Same shape as a rail contact: ghost ball at the mouth, no departure line.
+                    if (!contacted) result = new Result(true, position, null, Vector2.zero);
+
+                    break;
+                }
+
                 AddVertex(contacted ? cueAfterPath : approachPath, position, false);
 
                 pathDistance += distance;
@@ -194,6 +214,24 @@ namespace EightBall.Gameplay
                 if (nearest.collider == null || Hits[i].distance < nearest.distance) nearest = Hits[i];
             }
             return nearest;
+        }
+
+        /// <summary>
+        /// True once the cue ball centre is close enough to a pocket for <see cref="Pocket"/> to
+        /// drop it — the same centre-within-PocketRadius test the live capture uses.
+        /// </summary>
+        private static bool IsInPocketCapture(Vector2 position)
+        {
+            int count = Physics2D.OverlapCircle(position, TableLayout.BallRadius * 0.5f, PocketFilter, PocketOverlaps);
+
+            for (int i = 0; i < count; i++)
+            {
+                if (PocketOverlaps[i].GetComponent<Pocket>() == null) continue;
+
+                Vector2 offset = position - (Vector2)PocketOverlaps[i].transform.position;
+                if (offset.sqrMagnitude <= TableLayout.PocketRadius * TableLayout.PocketRadius) return true;
+            }
+            return false;
         }
 
         private static void AddVertex(List<Vector3> path, Vector2 point, bool force)
