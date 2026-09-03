@@ -16,6 +16,10 @@ namespace EightBall.Gameplay
         /// <summary>How fast the ball turns about the vertical axis at full side spin (rad/s).</summary>
         private const float MaxVerticalSpinRate = 5f;
 
+        /// <summary>Spawn pose: a quarter turn about Y stands a number patch (ball-local -X on
+        /// the map's equator) up facing the camera instead of lying on the ball's side.</summary>
+        private static readonly Quaternion SpawnOrientation = Quaternion.Euler(0f, 90f, 0f);
+
         private Quaternion _orientation = Quaternion.identity;
         private Rigidbody2D _body;
         private SpriteRenderer _renderer;
@@ -33,8 +37,8 @@ namespace EightBall.Gameplay
         }
 
         /// <summary>
-        /// Gives the ball its surface map and a fresh rack orientation. Called by
-        /// <see cref="TableSetup"/> right after the ball is (re)built.
+        /// Gives the ball its surface map and its spawn orientation (a number patch facing
+        /// up). Called by <see cref="TableSetup"/> right after the ball is (re)built.
         /// </summary>
         public void Setup(Texture2D surfaceMap)
         {
@@ -44,7 +48,7 @@ namespace EightBall.Gameplay
             _block.SetTexture(MapId, surfaceMap);
             _renderer.SetPropertyBlock(_block);
 
-            _orientation = Quaternion.identity;
+            _orientation = SpawnOrientation;
             PushOrientation();
         }
 
