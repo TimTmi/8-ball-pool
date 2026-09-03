@@ -1,40 +1,27 @@
-<?xml version="1.0" encoding="utf-8"?>
-<ui:UXML
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xmlns:ui="UnityEngine.UIElements"
-    xmlns:editor="UnityEditor.UIElements"
-    xsi:noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd">
-    
-    <ui:Style src="MainMenu.uss" />
-    
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/MainMenu.uss?fileID=7433441132597879392&amp;guid=16947e743f0301c3c8948972d9fad4e9&amp;type=3#MainMenu"/>
     <ui:VisualElement class="main-container">
-        <!-- Main Menu View -->
         <ui:VisualElement name="menu-view" class="view-container">
-            <ui:Label text="8 Ball Pool" class="title-label" />
-            <ui:Button name="play-button" text="Play" class="menu-button" />
-            <ui:Button name="credits-button" text="Credits" class="menu-button" />
-            <ui:Button name="quit-button" text="Quit" class="menu-button" />
+            <ui:Label text="8 Ball Pool" class="title-label"/>
+            <ui:Button name="play-button" text="Play" class="menu-button"/>
+            <ui:Button name="credits-button" text="Credits" class="menu-button"/>
+            <ui:Button name="quit-button" text="Quit" class="menu-button"/>
         </ui:VisualElement>
-
-        <!-- Credits View -->
         <ui:VisualElement name="credits-view" class="view-container" style="display: none;">
-            <ui:Label text="Credits" class="title-label" />
-            <ui:Label text="23127221    Nguyễn Tiến Luật" class="credits-text" />
-            <ui:Label text="23127228    Phạm Văn Minh" class="credits-text" />
-            <ui:Label text="23127281    Đặng Nghi Văn" class="credits-text" />
-            <ui:Label text="23127395    Trần Anh Khoa" class="credits-text" />
-            <ui:Label text="23127396    Lương Linh Khôi" class="credits-text" />
-            <ui:Button name="back-button" text="Back" class="menu-button" style="margin-top: 40px;" />
+            <ui:Label text="Credits" class="title-label"/>
+            <ui:Label text="23127221    Nguyễn Tiến Luật" class="credits-text"/>
+            <ui:Label text="23127228    Phạm Văn Minh" class="credits-text"/>
+            <ui:Label text="23127281    Đặng Nghi Văn" class="credits-text"/>
+            <ui:Label text="23127395    Trần Anh Khoa" class="credits-text"/>
+            <ui:Label text="23127396    Lương Linh Khôi" class="credits-text"/>
+            <ui:Button name="back-button" text="Back" class="menu-button" style="margin-top: 40px;"/>
         </ui:VisualElement>
-
-        <!-- Rules modal (opened by the Play button; Start Match begins the game).
-             Sits last so it draws on top of the menu. -->
         <ui:VisualElement name="rules-modal" class="modal-backdrop" style="display: none;">
             <ui:VisualElement name="rules-panel" class="modal-panel">
-                <ui:Label text="Game Rules" class="modal-title" />
-                <ui:VisualElement name="rules-list" class="rules-list" />
-                <ui:Button name="start-button" text="Start Match" class="menu-button modal-primary-button" />
-                <ui:Button name="rules-back-button" text="Back" class="menu-button modal-secondary-button" />
+                <ui:Label text="Game Rules" class="modal-title"/>
+                <ui:VisualElement name="rules-list" class="rules-list"/>
+                <ui:Button name="start-button" text="Start Match" class="menu-button modal-primary-button"/>
+                <ui:Button name="rules-back-button" text="Back" class="menu-button modal-secondary-button"/>
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>
