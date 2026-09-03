@@ -32,7 +32,7 @@
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
-        <ui:VisualElement name="menu-view" class="view-container menu-view">
+        <ui:VisualElement name="menu-view" class="view-container">
             <ui:VisualElement name="title-block" class="title-block">
                 <ui:Label text="8 BALL POOL" class="title-label"/>
                 <ui:Label text="PASS &amp; PLAY" name="Label" class="title-subtitle"/>

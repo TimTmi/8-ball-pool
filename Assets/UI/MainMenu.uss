@@ -127,10 +127,6 @@
     position: absolute;
 }
 
-.menu-view {
-    padding-bottom: 150px;
-}
-
 .title-block {
     align-items: center;
     margin-bottom: 56px;
