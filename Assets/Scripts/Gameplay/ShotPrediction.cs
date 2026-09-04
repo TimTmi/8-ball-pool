@@ -114,10 +114,11 @@ namespace EightBall.Gameplay
             // really stops.
             float stepTime = Time.fixedDeltaTime;
 
-            // The ball we strike has to be ignored once we are past it: the walk resumes from a
-            // point touching it, so the next cast would hit it again at zero distance and cut the
-            // post-contact run off before it drew anything.
-            Collider2D struckCollider = null;
+            // Whatever the walk last touched — the struck ball, or the rail it rebounded off — has
+            // to be ignored from then on: the walk resumes from a point touching it, so the next
+            // cast would hit it again at zero distance and cut the post-contact run off before it
+            // drew anything.
+            Collider2D lastContactCollider = null;
 
             var result = new Result(false, position, null, Vector2.zero);
             bool contacted = false;
@@ -132,31 +133,50 @@ namespace EightBall.Gameplay
                 float distance = speed * stepTime;
                 if (distance < MinimumStepDistance) break;
 
-                RaycastHit2D hit = CastAhead(position, velocity / speed, distance, request.CueBallCollider, struckCollider);
+                RaycastHit2D hit = CastAhead(position, velocity / speed, distance, request.CueBallCollider, lastContactCollider);
                 if (hit.collider != null)
                 {
                     Ball struckBall = contacted ? null : hit.collider.GetComponent<Ball>();
                     position = hit.centroid;
 
-                    // A rail, or a second ball: the preview has said enough.
                     if (struckBall == null)
                     {
                         AddVertex(contacted ? cueAfterPath : approachPath, position, true);
 
-                        // Reaching a rail on the way in is still a contact worth marking, so the
-                        // ghost shows where the cue ball comes to rest against the cushion. A rail
-                        // after the first ball is only where the preview runs out, so the ghost
-                        // stays on the ball contact it already found.
-                        if (!contacted) result = new Result(true, position, null, Vector2.zero);
+                        // A rail on the way in, a second ball, or a rail off the back of either.
+                        // Only the first of those is worth carrying the walk on from.
+                        Cushion cushion = contacted ? null : hit.collider.GetComponent<Cushion>();
+                        if (cushion == null)
+                        {
+                            // Nothing left to draw, so the ghost marks where the walk stopped —
+                            // unless it already sits on a contact found earlier.
+                            if (!contacted) result = new Result(true, position, null, Vector2.zero);
 
-                        break;
+                            break;
+                        }
+
+                        // Reaching a rail on the way in is a contact like any other: the ghost shows
+                        // where the cue ball comes to rest against the cushion, and the rebound is
+                        // handed to the post-contact run, so the guide draws the same short trail it
+                        // draws off a ball — which way the rail sends the cue ball, not a full set
+                        // of banks.
+                        result = new Result(true, position, null, Vector2.zero);
+                        cueAfterPath.Add(position);
+                        contacted = true;
+                        lastContactCollider = hit.collider;
+
+                        float normalRetention = NormalRetention(cushion, hit.collider, request.CueBallCollider);
+                        velocity = SpinModel.CushionReflect(velocity, hit.normal, normalRetention, cushion.SlideRetention);
+                        velocity = SpinModel.CushionRebound(velocity, spin.x);
+                        spin = new Vector2(spin.x * SpinModel.CushionSpinRetained, spin.y);
+                        continue;
                     }
 
                     // First contact: hand the walk over to the post-contact run.
                     AddVertex(approachPath, position, true);
                     cueAfterPath.Add(position);
                     contacted = true;
-                    struckCollider = hit.collider;
+                    lastContactCollider = hit.collider;
 
                     Vector2 lineOfCentres = (Vector2)struckBall.transform.position - position;
                     result = new Result(true, position, struckBall, lineOfCentres.normalized);
@@ -200,6 +220,21 @@ namespace EightBall.Gameplay
             AddVertex(contacted ? cueAfterPath : approachPath, position, true);
 
             return result;
+        }
+
+        /// <summary>
+        /// How much of the speed into a rail comes back out of it. The live bounce happens in two
+        /// steps — the solver's restitution, then the drain <see cref="Cushion"/> applies on top —
+        /// and the preview has to fold in both. Restitution alone would draw the rebound several
+        /// degrees shallow, since the speed sliding along the rail is barely damped either way.
+        /// </summary>
+        private static float NormalRetention(Cushion cushion, Collider2D railCollider, Collider2D cueBallCollider)
+        {
+            // Physics 2D is set to combine bounciness by taking the higher of the two materials.
+            float restitution = railCollider.bounciness;
+            if (cueBallCollider != null) restitution = Mathf.Max(restitution, cueBallCollider.bounciness);
+
+            return restitution * cushion.ReboundRetention;
         }
 
         private static RaycastHit2D CastAhead(Vector2 origin, Vector2 direction, float distance, Collider2D ignored, Collider2D alsoIgnored)

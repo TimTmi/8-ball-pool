@@ -19,6 +19,13 @@ namespace EightBall.Gameplay
         [Tooltip("Fraction of the sliding speed (along the rail) kept after a hit.")]
         [SerializeField, Range(0f, 1f)] private float _slideRetention = 0.95f;
 
+        /// <summary>Exposed so the aim preview can bounce off this exact rail's tuning instead of
+        /// keeping a duplicate constant of its own. See <see cref="ShotPrediction"/>.</summary>
+        public float ReboundRetention => _reboundRetention;
+
+        /// <inheritdoc cref="ReboundRetention"/>
+        public float SlideRetention => _slideRetention;
+
         // Thump volume ramps from silent to full across this impact-speed range (units/sec)
         private const float MinImpactSpeed = 0.5f;
         private const float MaxImpactSpeed = 10f;

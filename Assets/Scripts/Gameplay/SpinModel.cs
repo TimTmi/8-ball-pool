@@ -65,6 +65,25 @@ namespace EightBall.Gameplay
         }
 
         /// <summary>
+        /// Mirrors an incoming velocity off a rail and damps it in one step: the component along
+        /// <paramref name="normal"/> is flipped and scaled by <paramref name="normalRetention"/>,
+        /// the component along the rail kept and scaled by <paramref name="slideRetention"/>.
+        ///
+        /// For <see cref="ShotPrediction"/>, which has no solver to bounce the velocity for it the
+        /// way <see cref="Cushion"/> does for the live shot — so the caller folds the collider
+        /// restitution into <paramref name="normalRetention"/> before handing it over. Which way
+        /// <paramref name="normal"/> faces makes no difference: flipping it flips the dot product
+        /// with it too, and the reflected component comes out the same either way.
+        /// </summary>
+        public static Vector2 CushionReflect(Vector2 incomingVelocity, Vector2 normal, float normalRetention, float slideRetention)
+        {
+            Vector2 intoRail = normal * Vector2.Dot(incomingVelocity, normal);
+            Vector2 alongRail = incomingVelocity - intoRail;
+
+            return alongRail * slideRetention - intoRail * normalRetention;
+        }
+
+        /// <summary>
         /// Swings a rail rebound toward the side that was struck, which is what side spin is mostly
         /// for. Speed is preserved: a cushion never hands energy back, and the rail's own damping
         /// has already been applied by then.
